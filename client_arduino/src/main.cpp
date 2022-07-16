@@ -1,37 +1,25 @@
 #include <ESP8266WiFi.h>
 #include <EEPROM.h>
 
-struct WifiSettings {
+struct wifiSettings {
   String ssid;
   String password;
 };
 
-WifiSettings wifiSetup () {
-  Serial.readString();
-  Serial.println("Enter WiFi-SSID");
-  Serial.flush();
-  while (Serial.available() == 0) {}
-  String ssid = Serial.readStringUntil('\n');
-  
-  Serial.println("Enter WiFi-password");
-  Serial.flush();
-  while (Serial.available() == 0) {}
-  String password = Serial.readStringUntil('\n');
-
-  return {ssid, password};
-}
-
-int initialiseWiFi (WifiSettings wifi) {
-  WiFi.begin(wifi.ssid, wifi.password);
+void setupConnectToWiFi(String* ssid, String* password) {
+  WiFi.begin(*ssid, *password);
   int tries = 0;
-  Serial.printf("Connecting to %s \n", wifi.ssid);
-  while ((WiFi.status() != 3) && (tries < 16)) {
+  Serial.printf("Connecting to '%s' \n", *ssid);
+  while ((WiFi.status() != 3) && (tries < 21)) {
     tries++;
     Serial.print('*');
     delay(500);
   }
   Serial.println();
+}
 
+int setupTestWiFi (String* ssid, String* password) {
+  setupConnectToWiFi(ssid, password);
   if (WiFi.status() == 3) {
       Serial.println("WiFi success, IP:");
       Serial.println(WiFi.localIP());
@@ -43,36 +31,63 @@ int initialiseWiFi (WifiSettings wifi) {
   return -1;
 }
 
-String getServerToken() {
-  Serial.println("Hello from getServerToken()");
-  return "TODO: implement";
+String getStringFromSerial(String comment = "Enter String:") {
+  Serial.readString();
+  Serial.println(comment);
+  Serial.flush();
+  while(Serial.available()==0) {}
+  return Serial.readStringUntil('\n');
 }
 
-int initialSetup() {
-  WifiSettings wifi;
+wifiSettings setupWiFi () {
+  String ssid;
+  String password;
   do {
-  wifi = wifiSetup();
-  Serial.println(wifi.ssid);
-  Serial.println(wifi.password);
-  } while (initialiseWiFi(wifi) != 0);
-  String token = getServerToken();
+    ssid = getStringFromSerial("Enter WiFi-SSID");
+    password = getStringFromSerial("Enter WiFi-password");
+  } while (setupTestWiFi(&ssid, &password) != 0);
+  
+  return {ssid, password};
+}
+
+void getServerToken(String* token) {
+  Serial.println("Hello from getServerToken()");
+  *token = "hallo";
+}
+
+int setupInitialise() {
+  wifiSettings wifi = setupWiFi();
+//  getServerToken(token);
   /*if (storeSettingsToEEPROM(wifi, token)) {
     return 0;
   }*/
-  
   return -1;
 }
 
+bool askForSetup() {
+  Serial.begin(9600);
+  Serial.println();
+  delay(2000);
+  Serial.readString();
+  Serial.print("\nPress any key to enter setup");
+  delay(1000);
+  while (Serial.available() <= 0 && millis() < 10000) {
+    Serial.print(". ");
+    delay(1000);
+  }
+  Serial.println();
+  return (Serial.available()>0);  
+}
+
 void setup() {
-//  if (!EEPROM.get(0)) {
-    Serial.begin(9600);
-    Serial.println();
-    initialSetup();
-    Serial.println("Setup complete. Shutting down...");
-    Serial.flush();
-    Serial.end();
-    ESP.deepSleepMax();
-//  }
+  if (askForSetup()) {
+    setupInitialise();
+    Serial.println("Setup complete. Entering sleep...");
+  }
+  Serial.println("Entering sleep...");
+  Serial.flush();
+  Serial.end();
+  ESP.deepSleep(12e8);
 }
 
 void loop() {
