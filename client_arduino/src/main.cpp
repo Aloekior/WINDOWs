@@ -1,20 +1,25 @@
 #include <Arduino.h>
-#include "setup.h"
+#include <globalFunctions.h>
+#include <setup.h>
+#include <statusUpdate.h>
 
 void setup() {
   int LED = 2;
+  
   pinMode(LED, HIGH);
   if (askForSetup()) {
-    setupInitialise();
-    Serial.println("Setup complete. Entering sleep...");
+    if (setupInitialise()) {
+      Serial.println("Setup successful. Entering sleep...");
+    } else {
+      Serial.println("Setup failed, please try again");
+    }
   }
   pinMode(LED, LOW);
-  Serial.println("Entering sleep...");
-  Serial.flush();
-  Serial.end();
-  ESP.deepSleep(12e8);
+  
+  // sendStatusToServer();
+  
+  enterSleep();
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
 }

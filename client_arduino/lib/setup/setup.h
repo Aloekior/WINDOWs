@@ -1,18 +1,12 @@
-struct wifiSettings {
-  String ssid;
-  String password;
-};
+#include <Arduino.h>
+#include <globalFunctions.h>
 
-void setupConnectToWiFi(String* ssid, String* password);
-
-int setupTestWiFi (String* ssid, String* password);
-
-String getStringFromSerial(String comment = "Enter String:");
-
-wifiSettings setupWiFi ();
-
-void getServerToken(String* token);
+bool askForSetup();
 
 int setupInitialise();
 
-bool askForSetup();
+wifiSettings setupWiFi();
+
+String getServerToken(String* token);
+
+int storeSettingsToEEPROM(wifiSettings* wifi, String* token);

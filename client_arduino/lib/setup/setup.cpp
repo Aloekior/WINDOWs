@@ -1,81 +1,68 @@
-#include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <EEPROM.h>
-
-struct wifiSettings {
-  String ssid;
-  String password;
-};
-
-void setupConnectToWiFi(String* ssid, String* password) {
-  WiFi.begin(*ssid, *password);
-  int tries = 0;
-  Serial.printf("Connecting to '%s' \n", *ssid);
-  while ((WiFi.status() != 3) && (tries < 21)) {
-    tries++;
-    Serial.print('*');
-    delay(500);
-  }
-  Serial.println();
-}
-
-int setupTestWiFi (String* ssid, String* password) {
-  setupConnectToWiFi(ssid, password);
-  if (WiFi.status() == 3) {
-      Serial.println("WiFi success, IP:");
-      Serial.println(WiFi.localIP());
-      Serial.flush();
-      return 0;
-  }
-  Serial.printf("WiFi failed, status: %d \n", WiFi.status());
-  Serial.flush();
-  return -1;
-}
-
-String getStringFromSerial(String comment = "Enter String:") {
-  Serial.readString();
-  Serial.println(comment);
-  Serial.flush();
-  while(Serial.available()==0) {}
-  return Serial.readStringUntil('\n');
-}
-
-wifiSettings setupWiFi () {
-  String ssid;
-  String password;
-  do {
-    ssid = getStringFromSerial("Enter WiFi-SSID");
-    password = getStringFromSerial("Enter WiFi-password");
-  } while (setupTestWiFi(&ssid, &password) != 0);
-  
-  return {ssid, password};
-}
-
-void getServerToken(String* token) {
-  Serial.println("Hello from getServerToken()");
-  *token = "hallo";
-}
-
-int setupInitialise() {
-  wifiSettings wifi = setupWiFi();
-//  getServerToken(token);
-  /*if (storeSettingsToEEPROM(wifi, token)) {
-    return 0;
-  }*/
-  return -1;
-}
+#include <WiFiClient.h>
+#include <globalFunctions.h>
 
 bool askForSetup() {
-  Serial.begin(9600);
-  Serial.println();
-  delay(2000);
-  Serial.readString();
+  int timeOut = 10000;
+  
+  prepareSerial();
+  
   Serial.print("\nPress any key to enter setup");
   delay(1000);
-  while (Serial.available() <= 0 && millis() < 10000) {
+  while (Serial.available() <= 0 && millis() < timeOut) {
     Serial.print(". ");
     delay(1000);
   }
   Serial.println();
   return (Serial.available()>0);  
+}
+
+bool setupInitialise() {
+  int eepromAddress = 0;
+  wifiSettings wifi = setupWiFi();
+  serverItems serverConfig = getServerToken();
+  
+  storeSettingsInEEPROM(eepromAddress, &wifi, &serverConfig);
+  return true;
+}
+
+wifiSettings setupWiFi() {
+  String ssid;
+  String password;
+  
+  do {
+    ssid = getStringFromSerial("Enter WiFi-SSID");
+    password = getStringFromSerial("Enter WiFi-password");
+  } while (!testWiFiConnection(&ssid, &password));
+  
+  return {ssid, password};
+}
+
+serverItems getServerToken() {
+  int serverPort = 51337;
+  int timeOut = 30000;
+  IPAddress serverIP;
+  WiFiClient serverConnection;
+  String token;
+  
+  serverIP.fromString(getStringFromSerial("Please enter server IP-address"));
+  Serial.println("Server setup started... Please initiate connection procedure on server within 30 seconds!");
+  while (!serverConnection.connect(serverIP, serverPort) && millis() < timeOut) {
+    delay(503);
+  }
+  if (serverConnection.connected()) {
+    serverConnection.println(WiFi.macAddress());
+    while (serverConnection.connected() && !serverConnection.available()) {
+      delay(47);
+    }
+    token = serverConnection.readStringUntil('\0');
+  }
+  serverConnection.stop();
+  return {serverIP, token};
+}
+
+void storeSettingsInEEPROM(int address, wifiSettings* wifi, serverItems* serverItems) {
+  wifiToken setupConfiguration = {wifi->ssid, wifi->password, serverItems->ip, serverItems->token};
+  EEPROM.put(address, &setupConfiguration);
 }
