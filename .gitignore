@@ -1,7 +1,3 @@
 client_arduino/compile_commands.json
 client_arduino/.pio
-client_arduino/.vscode/.browse.c_cpp.db*
-client_arduino/.vscode/c_cpp_properties.json
-client_arduino/.vscode/launch.json
-client_arduino/.vscode/ipch
 client_arduino/.vscode
