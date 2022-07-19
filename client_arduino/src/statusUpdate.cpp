@@ -8,13 +8,7 @@ String charToString(byte length, char stringToBuild[]) {
    return returnString;
 }
 
-void readSettingsFromEEPROM(byte address, void *wifiToken) {
-  EEPROM.get(address, wifiToken);
-  
-  
-}
-
-void sendStatusToServer() {
+/*void sendStatusToServer() {
    byte eepromAddress = 0;
    byte buttonGPIO = 4;
    bool status = digitalRead(buttonGPIO);
@@ -28,4 +22,4 @@ void sendStatusToServer() {
    while(!testWiFiConnection(&ssid, &password)) {
       delay(5000);
    }
-}
+}*/

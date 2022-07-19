@@ -1,18 +1,20 @@
-#include <headers.h>
+#include "headers.h"
 
 void setup() {
   byte LED = 2;
   
-  pinMode(LED, HIGH);
   if (askForSetup()) {
+    pinMode(LED, HIGH);
     if (setupInitialise()) {
-      Serial.println("Setup successful. Entering sleep...");
+      Serial.println("Setup successful.");
     } else {
       Serial.println("Setup failed, please try again");
     }
+    pinMode(LED, LOW);
   }
-  pinMode(LED, LOW);
   
+  readFromEEPROM();
+
   // sendStatusToServer();
   
   enterSleep();

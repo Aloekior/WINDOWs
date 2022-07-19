@@ -25,11 +25,7 @@ bool testWiFiConnection (String* ssid, String* password) {
     Serial.flush();
     return true;
   }
-  Serial.println("WiFi failed with status: " + WiFi.status());
-  /*
-   detailed status message was not possible in my testing.
-   even entering wrong SSID or wrong password would always result in status 7 instead of 1 or 6
-  */
+  Serial.println("WiFi failed..");
   Serial.flush();
   return false;
 }
@@ -45,6 +41,14 @@ void connectToWiFi(String* ssid, String* password) {
     delay(500);
   }
   Serial.println();
+}
+
+String charToString(char* charArray, int size) {
+  String string;
+  for (int i = 0; i < size; i++) {
+    string += charArray[i];
+  }
+  return string;
 }
 
 void enterSleep() {
