@@ -1,14 +1,4 @@
-#include <Arduino.h>
-#include <ESP8266WiFi.h>
-#include <EEPROM.h>
-#include <customStructs.h>
-
-void enterSleep() {
-  Serial.println("Entering sleep...");
-  Serial.flush();
-  Serial.end();
-  ESP.deepSleep(12e8);
-}
+#include "headers.h"
 
 void prepareSerial() {
   Serial.begin(9600);
@@ -26,14 +16,14 @@ String getStringFromSerial(String comment = "Enter String:") {
 }
 
 bool testWiFiConnection (String* ssid, String* password) {
-   int wifiConnectedStatus = 3; // status 3 == WL_CONNECTED; see project readme for information
-   
+  byte wifiConnectedStatus = 3; // status 3 == WL_CONNECTED; see project readme for information
+  
   connectToWiFi(ssid, password);
   if (WiFi.status() == wifiConnectedStatus) { 
-      Serial.println("WiFi success, IP:");
-      Serial.println(WiFi.localIP());
-      Serial.flush();
-      return true;
+    Serial.println("WiFi success, IP:");
+    Serial.println(WiFi.localIP());
+    Serial.flush();
+    return true;
   }
   Serial.println("WiFi failed with status: " + WiFi.status());
   /*
@@ -45,7 +35,7 @@ bool testWiFiConnection (String* ssid, String* password) {
 }
 
 void connectToWiFi(String* ssid, String* password) {
-  int tries = 0;
+  byte tries = 0;
   
   WiFi.begin(*ssid, *password);
   Serial.println("Connecting to " + *ssid);
@@ -57,6 +47,9 @@ void connectToWiFi(String* ssid, String* password) {
   Serial.println();
 }
 
-void readSettingsFromEEPROM(int address, void *wifiToken) {
-   EEPROM.get(address, wifiToken);
+void enterSleep() {
+  Serial.println("Entering sleep...");
+  Serial.flush();
+  Serial.end();
+  ESP.deepSleep(12e8);
 }

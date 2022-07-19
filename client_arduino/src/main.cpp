@@ -1,10 +1,7 @@
-#include <Arduino.h>
-#include <globalFunctions.h>
-#include <setup.h>
-#include <statusUpdate.h>
+#include <headers.h>
 
 void setup() {
-  int LED = 2;
+  byte LED = 2;
   
   pinMode(LED, HIGH);
   if (askForSetup()) {
