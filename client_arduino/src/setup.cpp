@@ -1,4 +1,4 @@
-#include "headers.h"
+#include "header.h"
 
 bool askForSetup() {
   unsigned long timeOut = 10000;
@@ -16,12 +16,13 @@ bool askForSetup() {
 }
 
 bool setupInitialise() {
+  clearEEPROM();
+    
   byte eepromAddress = 0;
   wifiSettings wifi = setupWiFi();
-  // serverItems serverConfig = getServerToken();
-  serverItems serverConfig = {IPAddress(111,111,111,111), "a3f4"};
+  serverItems serverConfig = getServerToken();
   
-  storeSettingsInEEPROM(eepromAddress, wifi, serverConfig);
+  storeSettingsInEEPROM(eepromAddress, &wifi, &serverConfig);
   return true;
 }
 
@@ -55,29 +56,25 @@ serverItems getServerToken() {
       delay(50);
     }
     token = serverConnection.readStringUntil('\0');
+  } else {
+    token = "    ";
   }
   serverConnection.stop();
   return {serverIP, token};
 }
 
-void stringToChar(String source, char* target) {
-  for (unsigned int i = 0; i < source.length(); i++) {
-    target[i] = source[i];
-  }
-}
-
-void storeSettingsInEEPROM(int address, wifiSettings wifiInput, serverItems serverItems) {  
+void storeSettingsInEEPROM(int address, wifiSettings* wifiInput, serverItems* serverItems) {  
   
-  int l1 = wifiInput.ssid.length();
-  int l2 = wifiInput.password.length();
-  int l3 = serverItems.token.length();
-  IPAddress ip = serverItems.ipAddress;
+  unsigned int l1 = wifiInput->ssid.length();
+  unsigned int l2 = wifiInput->password.length();
+  unsigned int l3 = serverItems->token.length();
+  IPAddress ip = serverItems->ipAddress;
   
   eepromSettings set = {l1, {}, l2, {}, l3, {}, {ip[0], ip[1], ip[2], ip[3]}};
   
-  stringToChar(wifiInput.ssid, set.ssid);
-  stringToChar(wifiInput.password, set.password);
-  stringToChar(serverItems.token, set.token);
+  stringToChar(wifiInput->ssid, set.ssid);
+  stringToChar(wifiInput->password, set.password);
+  stringToChar(serverItems->token, set.token);
   
   EEPROM.begin(sizeof(eepromSettings));
   

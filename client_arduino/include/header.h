@@ -1,5 +1,5 @@
-#ifndef headers_h
-#define headers_h
+#ifndef header_h
+#define header_h
 
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
@@ -17,11 +17,11 @@ struct serverItems {
 };
 
 struct eepromSettings {
-  int ssidLength;
+  unsigned int ssidLength;
   char ssid[31];
-  int passwordLength;
+  unsigned int passwordLength;
   char password[63];
-  int tokenLength;
+  unsigned int tokenLength;
   char token[5];
   byte ipAddress[4];
 };
@@ -38,6 +38,12 @@ struct wifiToken {
 bool askForSetup();
 
 bool setupInitialise();
+
+// write to EEPROM
+
+void clearEEPROM();
+
+void storeSettingsInEEPROM(int address, wifiSettings* wifi, serverItems* serverItems);
 
 // global
 
@@ -57,23 +63,22 @@ void connectToWiFi(String* ssid, String* password);
 
 void sendServerUpdate();
 
-void readSettingsFromEEPROM(int address, void* wifiToken);
-
 void sendStatusToServer();
+
+void stringToChar(String string, char* charArray);
 
 String charToString(char* charArray, int size);
 
-void stringToChar(char* charArray, String string);
+void blink(int times, int delayBetween);
 
-// write to EEPROM
-void storeSettingsInEEPROM(int address, wifiSettings wifi, serverItems serverItems);
+void blinkSuccess();
 
+void blinkError();
 
-// read from EEPROM test
+// read from EEPROM
+
 wifiToken readSettingsFromEEPROM(int address);
 
 void readFromEEPROM();
-
-void printEEP();
 
 #endif

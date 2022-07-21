@@ -2,6 +2,7 @@ package Satellite;
 
 public class Satellite {
     private String idToken;
+    private String macAddress;
     private String room;
     private String name;
     private boolean inUse;

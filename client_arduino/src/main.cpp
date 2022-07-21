@@ -1,14 +1,13 @@
-#include "headers.h"
+#include "header.h"
 
 void setup() {
-  byte LED = 2;
-  
   if (askForSetup()) {
+    byte LED = 2;
     pinMode(LED, HIGH);
     if (setupInitialise()) {
-      Serial.println("Setup successful.");
+      blinkSuccess();
     } else {
-      Serial.println("Setup failed, please try again");
+      blinkError();
     }
     pinMode(LED, LOW);
   }
@@ -21,4 +20,7 @@ void setup() {
 }
 
 void loop() {
+    /*
+     * setup() runs the program once, then enters sleep for a set amount of time — after that, it is rerun.
+     */
 }

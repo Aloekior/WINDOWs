@@ -1,4 +1,4 @@
-#include "headers.h"
+#include "header.h"
 
 wifiToken readSettingsFromEEPROM(int address) {
    eepromSettings set;
@@ -12,14 +12,14 @@ wifiToken readSettingsFromEEPROM(int address) {
    return {ssid, password, token, ip};
 }
 
-
 void readFromEEPROM() {
    int address = 0;
    wifiToken wifi = readSettingsFromEEPROM(address);
   
    if (testWiFiConnection(&wifi.ssid, &wifi.password)) {
-      Serial.println("Wifi test successful!"); 
+      blinkSuccess();
    } else {
       Serial.println("Wifi test failed!");
+      blinkError();
    }
 }

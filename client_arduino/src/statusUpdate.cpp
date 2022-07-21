@@ -1,12 +1,4 @@
-#include "headers.h"
-
-String charToString(byte length, char stringToBuild[]) {
-   String returnString;
-   for (byte i = 0; i < length; i++) {
-      returnString += stringToBuild[i];
-   }
-   return returnString;
-}
+#include "header.h"
 
 /*void sendStatusToServer() {
    byte eepromAddress = 0;
