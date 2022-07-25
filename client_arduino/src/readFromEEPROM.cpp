@@ -3,7 +3,7 @@
 wifiToken readSettingsFromEEPROM(int address) {
    eepromSettings set;
    EEPROM.begin(sizeof(eepromSettings));
-   EEPROM.get(0, set);
+   EEPROM.get(address, set);
    String ssid = charToString(set.ssid,set.ssidLength);
    String password = charToString(set.password,set.passwordLength);
    String token = charToString(set.token,set.tokenLength);
@@ -15,11 +15,11 @@ wifiToken readSettingsFromEEPROM(int address) {
 void readFromEEPROM() {
    int address = 0;
    wifiToken wifi = readSettingsFromEEPROM(address);
-  
-   if (testWiFiConnection(&wifi.ssid, &wifi.password)) {
+   
+   connectToWiFi(&wifi.ssid, &wifi.password);
+   if (WiFi.status() == 3) {
       blinkSuccess();
    } else {
-      Serial.println("Wifi test failed!");
       blinkError();
    }
 }

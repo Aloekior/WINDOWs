@@ -1,4 +1,4 @@
-package backgroundrunner;
+package database;
 
 public class DatabaseConnection {
 }

@@ -22,7 +22,7 @@ struct eepromSettings {
   unsigned int passwordLength;
   char password[63];
   unsigned int tokenLength;
-  char token[5];
+  char token[9];
   byte ipAddress[4];
 };
 

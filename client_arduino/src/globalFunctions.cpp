@@ -3,7 +3,7 @@
 void prepareSerial() {
   Serial.begin(9600);
   Serial.println();
-  delay(2000);
+  delay(4000);
   Serial.readString();
 }
 
@@ -27,31 +27,32 @@ String getStringFromSerial(String comment = "Enter String:") {
 bool testWiFiConnection (String* ssid, String* password) {
   byte wifiConnectedStatus = 3; // status 3 == WL_CONNECTED; see project readme for information
   
+  Serial.println("Connecting to '" + *ssid + "'");
+  
   connectToWiFi(ssid, password);
+  
   if (WiFi.status() == wifiConnectedStatus) { 
-    Serial.println("WiFi success, IP:");
-    Serial.println(WiFi.localIP());
+    Serial.println("Connected to '" + *ssid + "'");
     Serial.flush();
     blinkSuccess();
     return true;
   }
-  Serial.println("WiFi failed..");
+  Serial.println("WiFi FAILED");
   Serial.flush();
   blinkError();
   return false;
 }
 
 void connectToWiFi(String* ssid, String* password) {
-  byte tries = 0;
-  
-  WiFi.begin(*ssid, *password);
-  Serial.println("Connecting to " + *ssid);
-  while ((WiFi.status() != 3) && (tries < 26)) {
-    tries++;
-    Serial.print('*');
-    delay(500);
-  }
-  Serial.println();
+    byte LED = 2;
+    byte tries = 0;
+
+    WiFi.begin(*ssid, *password);
+    while ((WiFi.status() == 0) && (tries < 31)) {
+        pinMode(LED, tries % 2);
+        tries++;
+        delay(1000);
+    }
 }
 
 String charToString(char* charArray, int size) {
@@ -62,7 +63,6 @@ String charToString(char* charArray, int size) {
   return string;
 }
 
-
 void stringToChar(String source, char* target) {
     for (unsigned int i = 0; i < source.length(); i++) {
         target[i] = source[i];
@@ -72,19 +72,19 @@ void stringToChar(String source, char* target) {
 void blink(int times, int delayBetween){
   byte LED = 2;
   while (times-- > 0) {
-    digitalWrite(LED,HIGH);
+    pinMode(LED,HIGH);
     delay(delayBetween);
-    digitalWrite(LED,LOW);
+    pinMode(LED,LOW);
     delay(delayBetween);
   }
 }
 
 void blinkSuccess() {
-  blink(3,200);
+  blink(3,300);
 }
 
 void blinkError() {
-  blink(10,50);
+  blink(10,100);
 }
 
 void enterSleep() {

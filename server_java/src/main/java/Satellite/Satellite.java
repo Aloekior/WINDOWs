@@ -26,7 +26,7 @@ public class Satellite {
         return name;
     }
     
-    public boolean isInUse() {
+    public boolean inUse() {
         return inUse;
     }
 }

@@ -1,3 +1,5 @@
 client_arduino/compile_commands.json
 client_arduino/.pio
 client_arduino/.vscode
+client_arduino/cmake-build-*
+client_arduino/CMakeListsPrivate.txt

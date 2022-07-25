@@ -1,4 +1,4 @@
-package background.runner;
+package backgroundrunner;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,7 +14,7 @@ public class RunnerSocket {
         int clientStatePosition = 21;
         
         ServerSocket socket = new ServerSocket(serverPort);
-        System.out.println("Server is waiting for Client connection");
+        System.out.println("Server is waiting for client connection");
         Socket client = socket.accept();
         
         InputStream clientInput = client.getInputStream();
