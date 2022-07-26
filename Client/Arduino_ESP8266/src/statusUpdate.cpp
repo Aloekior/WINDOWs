@@ -33,10 +33,12 @@ bool sendStatusToServer(String* token, IPAddress* serverIP, bool state) {
     serverConnection.println(*token);
     delay(50);
     serverConnection.println(state);
+
+    confirmation = serverConnection.readStringUntil('\n');
     
     while(!confirmation.equals("OK") && tries < 3) {
       blink(3,150);
-      serverConnection.readStringUntil('\n');
+      confirmation = serverConnection.readStringUntil('\n');
       tries++;
     }
     if (confirmation.equals("OK")) {
