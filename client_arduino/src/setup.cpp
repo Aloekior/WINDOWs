@@ -68,7 +68,6 @@ serverItems getServerToken() {
     }
     delay(100);
   }
-  Serial.println(serverConnection.available());
 
   serverConnection.println(WiFi.macAddress());
 
