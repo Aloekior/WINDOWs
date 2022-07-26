@@ -3,3 +3,5 @@ client_arduino/.pio
 client_arduino/.vscode
 client_arduino/cmake-build-*
 client_arduino/CMakeListsPrivate.txt
+*/target/
+*.java
