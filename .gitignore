@@ -5,3 +5,4 @@ client_arduino/cmake-build-*
 client_arduino/CMakeListsPrivate.txt
 target
 *.class
+compile_commands.json
