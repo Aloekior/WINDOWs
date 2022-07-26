@@ -27,9 +27,10 @@ void runSetup() {
 }
 
 bool setupInitialise() {
-  clearEEPROM();
-
   byte eepromAddress = 0;
+  clearEEPROM();
+  
+  Serial.println("Setup started");
   wifiSettings wifi = setupWiFi();
   serverItems serverConfig = getServerToken();
 
