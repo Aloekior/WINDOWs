@@ -49,6 +49,25 @@ wifiSettings setupWiFi() {
   return {ssid, password};
 }
 
+bool testWiFiConnection(String *ssid, String *password) {
+  byte wifiConnectedStatus = 3; // status 3 == WL_CONNECTED; see project readme for information
+
+  Serial.println("Connecting to '" + *ssid + "'...");
+
+  connectToWiFi(ssid, password);
+
+  if (WiFi.status() == wifiConnectedStatus) {
+    Serial.println("Connection to '" + *ssid + "' SUCCESSFUL");
+    Serial.flush();
+    blinkSuccess();
+    return true;
+  }
+  Serial.println("Connection to '" + *ssid + "' FAILED");
+  Serial.flush();
+  blinkError();
+  return false;
+}
+
 serverItems getServerToken() {
   int serverPort = 57336;
   unsigned long messageDelay = 50000;
@@ -63,7 +82,7 @@ serverItems getServerToken() {
   while (serverConnection.connect(serverIP, serverPort) == 0) {
     if (millis() > messageDelay && !messageDisplay) {
       messageDisplay = true;
-      Serial.println("Is the server IP-Address correct?\nIs the server awaiting a new client?");
+      Serial.println("Is the server IP-Address correct?\nIs the server waiting for a new client?");
       Serial.flush();
     }
     delay(100);
@@ -81,4 +100,3 @@ serverItems getServerToken() {
   serverConnection.stop();
   return {serverIP, token};
 }
-

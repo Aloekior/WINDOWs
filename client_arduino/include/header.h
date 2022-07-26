@@ -33,7 +33,7 @@ struct wifiToken {
   IPAddress ipAddress;
 };
 
-// setup
+// setup functions
 
 bool askForSetup();
 
@@ -41,21 +41,23 @@ void runSetup();
 
 bool setupInitialise();
 
-// write to EEPROM
+wifiSettings setupWiFi();
+
+serverItems getServerToken();
+
+// EEPROM functions
+
+bool eepromCheck();
 
 void clearEEPROM();
 
 void storeSettingsInEEPROM(int address, wifiSettings *wifi, serverItems *serverItems);
 
+wifiToken readSettingsFromEEPROM(int address);
+
 // global
 
-wifiSettings setupWiFi();
-
-serverItems getServerToken();
-
 void prepareSerial();
-
-void enterSleep();
 
 String getStringFromSerial(String comment);
 
@@ -63,11 +65,9 @@ bool testWiFiConnection(String *ssid, String *password);
 
 void connectToWiFi(String *ssid, String *password);
 
-void waitForWiFi();
+void runStatusUpdate();
 
-void sendServerUpdate();
-
-void sendStatusToServer();
+bool sendStatusToServer(String* token, IPAddress* ipAddress, bool state);
 
 void stringToChar(String string, char *charArray);
 
@@ -79,10 +79,6 @@ void blinkSuccess();
 
 void blinkError();
 
-// read from EEPROM
-
-wifiToken readSettingsFromEEPROM(int address);
-
-void readFromEEPROM();
+void enterSleep();
 
 #endif

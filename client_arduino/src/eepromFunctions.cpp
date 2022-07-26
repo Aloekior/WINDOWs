@@ -1,8 +1,16 @@
 #include "header.h"
 
+bool eepromCheck() {
+  int eepromAddress = 0;
+  EEPROM.begin(sizeof(eepromSettings));
+  
+  return (EEPROM.read(eepromAddress) > 0);
+}
+
 void clearEEPROM() {
   int eepromMaxSize = 4096;
   EEPROM.begin(eepromMaxSize);
+  
   for (int i = 0; i < eepromMaxSize; i++) {
     EEPROM.write(i, 0);
   }

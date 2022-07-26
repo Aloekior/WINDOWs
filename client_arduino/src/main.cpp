@@ -1,15 +1,16 @@
 #include "header.h"
 
 void setup() {
-  int eepromAddress = 0;
-
-  if (askForSetup()) {
-    runSetup();
+  if (eepromCheck()) {
+    delay(2000);
+    if (askForSetup()) {
+      runSetup();
+    } else {
+      runStatusUpdate();
+    }
   } else {
-    wifiToken wifi = readSettingsFromEEPROM(eepromAddress);
-    connectToWiFi(&wifi.ssid, &wifi.password);
-
-    // sendStatusToServer();
+    prepareSerial();
+    runSetup();
   }
 
   enterSleep();

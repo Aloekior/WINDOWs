@@ -9,7 +9,7 @@ void prepareSerial() {
   Serial.readString();
 }
 
-String getStringFromSerial(String comment = "Enter String:") {
+String getStringFromSerial(String comment) {
   Serial.readString(); // clear Serial buffer before reading to discard leftovers
   Serial.println(comment);
   Serial.flush();
@@ -17,36 +17,7 @@ String getStringFromSerial(String comment = "Enter String:") {
   return Serial.readStringUntil('\n'); // make sure Serial Monitor is set to end of line == LF (newline)
 }
 
-/* WiFi functions */
-
-bool testWiFiConnection(String *ssid, String *password) {
-  byte wifiConnectedStatus = 3; // status 3 == WL_CONNECTED; see project readme for information
-
-  Serial.println("Connecting to '" + *ssid + "'...");
-
-  connectToWiFi(ssid, password);
-
-  if (WiFi.status() == wifiConnectedStatus) {
-    Serial.println("Connection to '" + *ssid + "' SUCCESSFUL");
-    Serial.flush();
-    blinkSuccess();
-    return true;
-  }
-  Serial.println("Connection to '" + *ssid + "' FAILED");
-  Serial.flush();
-  blinkError();
-  return false;
-}
-
-void connectToWiFi(String *ssid, String *password) {
-  WiFi.begin(*ssid, *password);
-  waitForWiFi();
-  if (WiFi.status() == 3) {
-    blinkSuccess();
-  } else {
-    blinkError();
-  }
-}
+/* Wi-Fi functions */
 
 void waitForWiFi() {
   byte LED = 2;
@@ -56,6 +27,16 @@ void waitForWiFi() {
     pinMode(LED, tries % 2);
     tries++;
     delay(1000);
+  }
+}
+
+void connectToWiFi(String *ssid, String *password) {
+  WiFi.begin(*ssid, *password);
+  waitForWiFi();
+  if (WiFi.status() == 3) {
+    blinkSuccess();
+  } else {
+    blinkError();
   }
 }
 
@@ -88,11 +69,11 @@ void blink(int times, int delayBetween) {
 }
 
 void blinkSuccess() {
-  blink(3, 300);
+  blink(3, 500);
 }
 
 void blinkError() {
-  blink(10, 100);
+  blink(10, 75);
 }
 
 /* Sleep mode functions */
@@ -101,5 +82,5 @@ void enterSleep() {
   Serial.println("Entering sleep...");
   Serial.flush();
   Serial.end();
-  ESP.deepSleep(12e8);
+  EspClass::deepSleep(12e8);
 }
