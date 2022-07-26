@@ -1,8 +1,7 @@
-client_arduino/compile_commands.json
-client_arduino/.pio
-client_arduino/.vscode
-client_arduino/cmake-build-*
-client_arduino/CMakeListsPrivate.txt
+.pio
+.vscode
+cmake-build-*
+CMakeListsPrivate.txt
 target
 *.class
 compile_commands.json
