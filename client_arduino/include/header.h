@@ -22,7 +22,7 @@ struct eepromSettings {
   unsigned int passwordLength;
   char password[63];
   unsigned int tokenLength;
-  char token[9];
+  char token[37];
   byte ipAddress[4];
 };
 
@@ -37,13 +37,15 @@ struct wifiToken {
 
 bool askForSetup();
 
+void runSetup();
+
 bool setupInitialise();
 
 // write to EEPROM
 
 void clearEEPROM();
 
-void storeSettingsInEEPROM(int address, wifiSettings* wifi, serverItems* serverItems);
+void storeSettingsInEEPROM(int address, wifiSettings *wifi, serverItems *serverItems);
 
 // global
 
@@ -57,17 +59,19 @@ void enterSleep();
 
 String getStringFromSerial(String comment);
 
-bool testWiFiConnection (String* ssid, String* password);
+bool testWiFiConnection(String *ssid, String *password);
 
-void connectToWiFi(String* ssid, String* password);
+void connectToWiFi(String *ssid, String *password);
+
+void waitForWiFi();
 
 void sendServerUpdate();
 
 void sendStatusToServer();
 
-void stringToChar(String string, char* charArray);
+void stringToChar(String string, char *charArray);
 
-String charToString(char* charArray, int size);
+String charToString(char *charArray, int size);
 
 void blink(int times, int delayBetween);
 
