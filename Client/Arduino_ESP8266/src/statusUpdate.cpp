@@ -19,7 +19,6 @@ bool sendStatusToServer(String* token, IPAddress* serverIP, bool state) {
   int serverPort = 57335;
   int tries = 0;
   WiFiClient serverConnection;
-  String confirmation = "";
   
   while (serverConnection.connect(*serverIP, serverPort) == 0 && tries < 3) {
     blink(3,100);
@@ -34,7 +33,7 @@ bool sendStatusToServer(String* token, IPAddress* serverIP, bool state) {
     delay(50);
     serverConnection.println(state);
 
-    confirmation = serverConnection.readStringUntil('\n');
+    String confirmation = serverConnection.readStringUntil('\n');
     
     while(!confirmation.equals("OK") && tries < 3) {
       blink(3,150);

@@ -39,14 +39,14 @@ public class Main {
         System.out.println("Waiting for new sensor to connect..");
         Socket sensor = socket.accept();
         
-        BufferedReader clientInput = new BufferedReader(new InputStreamReader(sensor.getInputStream()));
+        BufferedReader sensorInput = new BufferedReader(new InputStreamReader(sensor.getInputStream()));
         
-        String macAddress = clientInput.readLine();
+        String macAddress = sensorInput.readLine();
         
         System.out.println("Connected to: " + macAddress);
         
         token = getToken(macAddress);
-        sendTokenToSensor(token, sensor);
+        sendStringToSensor(token, sensor);
         
         System.out.println("Token sent to sensor: '" + token + "'");
         
@@ -65,7 +65,7 @@ public class Main {
         return token;
     }
     
-    private static void sendTokenToSensor(String token, Socket sensor) throws IOException {
+    private static void sendStringToSensor(String token, Socket sensor) throws IOException {
         PrintWriter printWriter = new PrintWriter(sensor.getOutputStream());
         printWriter.println(token);
         printWriter.flush();

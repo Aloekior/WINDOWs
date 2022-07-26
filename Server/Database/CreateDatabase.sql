@@ -9,8 +9,8 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS sensors (
-    sensor_mac VARCHAR(12) UNIQUE NOT NULL,
-    sensor_token VARCHAR(8) UNIQUE NOT NULL,
+    sensor_mac VARCHAR(17) UNIQUE NOT NULL,
+    sensor_token VARCHAR(36) UNIQUE NOT NULL,
     sensor_room VARCHAR(20),
     sensor_name VARCHAR(20),
     sensor_active BOOLEAN DEFAULT 0,
@@ -19,21 +19,24 @@ CREATE TABLE IF NOT EXISTS sensors (
 
 CREATE TABLE IF NOT EXISTS window_history (
     history_entry_id INT AUTO_INCREMENT,
-    sensor_mac VARCHAR(12) NOT NULL,
+    sensor_mac VARCHAR(17) NOT NULL,
     history_timestamp DATETIME NOT NULL DEFAULT now(),
     history_state BOOLEAN,
     PRIMARY KEY (history_entry_id),
     FOREIGN KEY (sensor_mac) REFERENCES sensors (sensor_mac)
 );
 
-CREATE USER 'serverDaemon'@'localhost' IDENTIFIED BY 'a8aKJFAL8%lo113ZZ&Bvmm12g_$1!';
-CREATE USER 'serverCLI'@'localhost' IDENTIFIED BY '!uJmng8124n!fLffas%Po3$(axyq';
+CREATE USER 'serverListener' IDENTIFIED BY 'a8aKJFAL8%lo113ZZ&Bvm12g_$1!';
+GRANT EXECUTE ON PROCEDURE WINDOWs.updateSensorState TO 'serverListener';
 
+
+CREATE USER 'serverInterface' IDENTIFIED BY '!uJmng8124n!fLffas%Po3$(axyq';
 
 CREATE USER 'serverAdmin'@'localhost' IDENTIFIED BY 'password';
-GRANT EXECUTE ON PROCEDURE WINDOWs.changeSensorState TO 'serverDaemon'@'localhost';
-GRANT INSERT ON WINDOWs.sensors TO 'serverAdmin'@'localhost';
-GRANT UPDATE ON WINDOWs.sensors TO 'serverAdmin'@'localhost';
+GRANT EXECUTE ON PROCEDURE WINDOWs.updateSensorState TO 'serverListener';
+
+/*GRANT INSERT ON WINDOWs.sensors TO 'serverAdmin'@'localhost';
+GRANT UPDATE ON WINDOWs.sensors TO 'serverAdmin'@'localhost';*/
 
 
 DELIMITER //
@@ -43,7 +46,7 @@ DELIMITER //
 
 
 DROP FUNCTION IF EXISTS checkSensorMac;
-CREATE FUNCTION checkSensorMac(input_mac VARCHAR(12)) RETURNS INT
+CREATE FUNCTION checkSensorMac(input_mac VARCHAR(17)) RETURNS INT
 BEGIN
     IF ((SELECT COUNT(sensor_mac) FROM sensors WHERE sensor_mac = input_mac) > 0) THEN
         RETURN 1;
@@ -52,7 +55,7 @@ BEGIN
 END //
 
 DROP FUNCTION IF EXISTS checkSensorToken;
-CREATE FUNCTION checkSensorToken(input_token VARCHAR(4)) RETURNS INT
+CREATE FUNCTION checkSensorToken(input_token VARCHAR(36)) RETURNS INT
 BEGIN
     IF ((SELECT COUNT(sensor_token) FROM sensors WHERE sensor_token = input_token) > 0) THEN
         RETURN 1;
@@ -61,7 +64,7 @@ BEGIN
 END //
 
 DROP FUNCTION IF EXISTS checkSensorValid;
-CREATE FUNCTION checkSensorValid (input_mac VARCHAR(12), input_token VARCHAR(4)) RETURNS INT
+CREATE FUNCTION checkSensorValid (input_mac VARCHAR(17), input_token VARCHAR(36)) RETURNS INT
     BEGIN
         IF (checkSensorMac(input_mac) = 1 && checkSensorToken(input_token) = 1) THEN
             RETURN 1;
@@ -70,7 +73,7 @@ CREATE FUNCTION checkSensorValid (input_mac VARCHAR(12), input_token VARCHAR(4))
     END //
     
 DROP FUNCTION IF EXISTS sensorUpdateRequired;
-CREATE FUNCTION sensorUpdateRequired(input_mac VARCHAR(12), input_state INT) RETURNS INT
+CREATE FUNCTION sensorUpdateRequired(input_mac VARCHAR(17), input_state INT) RETURNS INT
     BEGIN
         DECLARE maxTimeStamp DATETIME;
         DECLARE currentState INT;
@@ -90,7 +93,7 @@ CREATE FUNCTION sensorUpdateRequired(input_mac VARCHAR(12), input_state INT) RET
 /* PROCEDURES */
 
 DROP PROCEDURE IF EXISTS addSensor;
-CREATE PROCEDURE addSensor (input_mac VARCHAR(12), input_token VARCHAR(4))
+CREATE PROCEDURE addSensor (input_mac VARCHAR(17), input_token VARCHAR(36))
     BEGIN
         INSERT INTO sensors (sensor_mac, sensor_token) VALUES (input_mac, input_token);
         SELECT 0;
@@ -98,7 +101,7 @@ CREATE PROCEDURE addSensor (input_mac VARCHAR(12), input_token VARCHAR(4))
 
 
 DROP PROCEDURE IF EXISTS changeSensorRoom;
-CREATE PROCEDURE changeSensorRoom (input_mac VARCHAR(12), input_token VARCHAR(4), input_room VARCHAR(20))
+CREATE PROCEDURE changeSensorRoom (input_mac VARCHAR(17), input_token VARCHAR(36), input_room VARCHAR(20))
     BEGIN
         IF (checkSensorValid(input_mac,input_token)) THEN
             UPDATE sensors SET sensor_room = input_room WHERE sensor_token = input_token;
@@ -106,7 +109,7 @@ CREATE PROCEDURE changeSensorRoom (input_mac VARCHAR(12), input_token VARCHAR(4)
     END //
     
 DROP PROCEDURE IF EXISTS deactivateSensor;
-CREATE PROCEDURE deactivateSensor (input_mac VARCHAR(12), input_token VARCHAR(4))
+CREATE PROCEDURE deactivateSensor (input_mac VARCHAR(17), input_token VARCHAR(36))
     BEGIN
         IF (checkSensorValid(input_mac,input_token)) THEN
             UPDATE sensors SET sensor_room = NULL, sensor_active = 0 WHERE sensor_token = input_token;
@@ -115,7 +118,7 @@ CREATE PROCEDURE deactivateSensor (input_mac VARCHAR(12), input_token VARCHAR(4)
 
 
 DROP PROCEDURE IF EXISTS getSensorState;
-CREATE PROCEDURE getSensorState (input_mac VARCHAR(12), input_token VARCHAR(4))
+CREATE PROCEDURE getSensorState (input_mac VARCHAR(17), input_token VARCHAR(36))
     BEGIN
         IF (checkSensorValid(input_mac,input_token)) THEN
             SELECT history_state FROM window_history WHERE sensor_mac = input_mac;
@@ -123,8 +126,8 @@ CREATE PROCEDURE getSensorState (input_mac VARCHAR(12), input_token VARCHAR(4))
     END //
 
 
-DROP PROCEDURE IF EXISTS changeSensorState;
-CREATE PROCEDURE changeSensorState (input_mac VARCHAR(12), input_token VARCHAR(4), input_state BOOLEAN)
+DROP PROCEDURE IF EXISTS updateSensorState;
+CREATE PROCEDURE updateSensorState (input_mac VARCHAR(17), input_token VARCHAR(36), input_state BOOLEAN)
     BEGIN
         IF (checkSensorValid(input_mac, input_token)) THEN
             IF ((SELECT sensor_active FROM sensors WHERE (sensor_mac = input_mac AND sensor_token = input_token)) = 0) THEN
@@ -140,7 +143,7 @@ CREATE PROCEDURE changeSensorState (input_mac VARCHAR(12), input_token VARCHAR(4
     END //
 
 DROP PROCEDURE IF EXISTS checkSensorExists;
-CREATE PROCEDURE checkSensorExists (input_mac VARCHAR(12))
+CREATE PROCEDURE checkSensorExists (input_mac VARCHAR(17))
     BEGIN
         SELECT checkSensorMac(input_mac);
     END //
