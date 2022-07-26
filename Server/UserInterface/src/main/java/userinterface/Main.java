@@ -3,78 +3,71 @@ package userinterface;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Random;
 import java.util.Scanner;
+import java.util.UUID;
 
 import static database.DatabaseConnection.*;
-import static userinterface.commandCases.*;
+import static userinterface.userCommands.*;
 
 public class Main {
     public static void main(String[] args) throws IOException {
         Scanner scanner = new Scanner(System.in);
+        boolean quitApplication = false;
         
-        System.out.println("Please enter command:");
-        String command = scanner.nextLine();
-        
-        switch (command) {
-            case "addClient" -> caseAddClient();
-            case "removeClient" -> caseRemoveClient();
-            case "printStates" -> casePrintStates();
-            case "printHistory" -> casePrintHistory();
-            default -> caseHelp();
+        while (!quitApplication) {
+            System.out.print("\nPlease enter a command: ");
+            String command = scanner.nextLine();
+            switch (command) {
+                case "addSensor" -> caseAddSensor();
+                case "removeSensor" -> caseRemoveSensor();
+                case "printStates" -> casePrintStates();
+                case "printHistory" -> casePrintHistory();
+                case "exit" -> quitApplication = true;
+                default -> {
+                    System.out.println("Unknown command '" + command + "'\n");
+                    caseHelp();
+                }
+            }
         }
     }
     
-    public static void addClient() throws IOException {
-        int serverPort = 57332;
+    public static void addSensor() throws IOException {
+        int serverPort = 57336;
         String token;
         
         ServerSocket socket = new ServerSocket(serverPort);
-        System.out.println("Waiting for new client to connect..");
-        Socket client = socket.accept();
-
-        BufferedReader clientInput = new BufferedReader(new InputStreamReader(client.getInputStream()));
+        System.out.println("Waiting for new sensor to connect..");
+        Socket sensor = socket.accept();
+        
+        BufferedReader clientInput = new BufferedReader(new InputStreamReader(sensor.getInputStream()));
         
         String macAddress = clientInput.readLine();
         
         System.out.println("Connected to: " + macAddress);
         
         token = getToken(macAddress);
-        System.out.println("Token sent to client: '" + token + "'");
-
-        PrintWriter printWriter = new PrintWriter(client.getOutputStream());
-        printWriter.println(token);
-        printWriter.flush();
+        sendTokenToSensor(token, sensor);
         
-        client.close();
+        System.out.println("Token sent to sensor: '" + token + "'");
+        
+        sensor.close();
         socket.close();
     }
     
     public static String getToken(String macAddress) {
-        int tokenLength = 8;
         String token = databaseCheckMac(macAddress);
         
-        if (token.length() != tokenLength) {
+        if (token.equals("")) {
             do {
-                token = generateToken(tokenLength);
+                token = UUID.randomUUID().toString();
             } while (databaseCheckToken(token));
         }
         return token;
     }
     
-    public static String generateToken(int tokenLength) {
-        Random rand = new Random();
-        String token = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                + "0123456789"
-                + "abcdefghijklmnopqrstuvxyz";
-
-        StringBuilder tokenBuilder = new StringBuilder(tokenLength);
-
-        for (int i = 0; i < tokenLength; i++) {
-            int index = token.length() * rand.nextInt();
-            tokenBuilder.append(token.charAt(index));
-        }
-
-        return tokenBuilder.toString();
+    private static void sendTokenToSensor(String token, Socket sensor) throws IOException {
+        PrintWriter printWriter = new PrintWriter(sensor.getOutputStream());
+        printWriter.println(token);
+        printWriter.flush();
     }
 }
