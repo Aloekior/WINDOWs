@@ -1,73 +1,58 @@
 package userinterface;
 
-import java.io.*;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.Scanner;
-import java.util.UUID;
+import userinterface.objects.DatabaseConnection;
+import userinterface.objects.User;
 
-import static database.DatabaseConnection.*;
-import static userinterface.userCommands.*;
+import java.util.Scanner;
 
 public class Main {
-    public static void main(String[] args) throws IOException {
-        Scanner scanner = new Scanner(System.in);
+    static Scanner scanner = new Scanner(System.in);
+    
+    public static void main(String[] args) {
         boolean quitApplication = false;
         
-        while (!quitApplication) {
-            System.out.print("\nPlease enter a command: ");
-            String command = scanner.nextLine();
-            switch (command) {
-                case "addSensor" -> caseAddSensor();
-                case "removeSensor" -> caseRemoveSensor();
-                case "printStates" -> casePrintStates();
-                case "printHistory" -> casePrintHistory();
-                case "exit" -> quitApplication = true;
-                default -> {
-                    System.out.println("Unknown command '" + command + "'\n");
-                    caseHelp();
+        DatabaseConnection database = userLogin();
+        
+        if (database.databaseUserValid()) {
+            while (!quitApplication) {
+                System.out.print("\nPlease enter a command: ");
+                String command = scanner.nextLine();
+                switch (command) {
+                    case "addSensor" -> database.addSensor();
+                    case "deactivateSensor" -> database.removeSensor();
+                    case "printStates" -> database.printCurrentStates();
+                    case "printHistory" -> database.printHistory();
+                    case "createUser" -> database.createUser();
+                    case "exit" -> quitApplication = true;
+                    default -> {
+                        System.out.println("Unknown command '" + command + "'\n");
+                        displayHelp();
+                    }
                 }
             }
         }
     }
     
-    public static void addSensor() throws IOException {
-        int serverPort = 57336;
-        String token;
+    public static DatabaseConnection userLogin() {
+        User user;
+        DatabaseConnection database = new DatabaseConnection();
+        int loginAttempts = 0;
+
+        do {
+            user = new User();
+            database.connect(user);
+        } while (!user.isValid() && loginAttempts++ < 3);
         
-        ServerSocket socket = new ServerSocket(serverPort);
-        System.out.println("Waiting for new sensor to connect..");
-        Socket sensor = socket.accept();
-        
-        BufferedReader sensorInput = new BufferedReader(new InputStreamReader(sensor.getInputStream()));
-        
-        String macAddress = sensorInput.readLine();
-        
-        System.out.println("Connected to: " + macAddress);
-        
-        token = getToken(macAddress);
-        sendStringToSensor(token, sensor);
-        
-        System.out.println("Token sent to sensor: '" + token + "'");
-        
-        sensor.close();
-        socket.close();
+        return database;
     }
-    
-    public static String getToken(String macAddress) {
-        String token = databaseCheckMac(macAddress);
-        
-        if (token.equals("")) {
-            do {
-                token = UUID.randomUUID().toString();
-            } while (databaseCheckToken(token));
-        }
-        return token;
-    }
-    
-    private static void sendStringToSensor(String token, Socket sensor) throws IOException {
-        PrintWriter printWriter = new PrintWriter(sensor.getOutputStream());
-        printWriter.println(token);
-        printWriter.flush();
+
+    public static void displayHelp() {
+        System.out.println("""
+                        Available Commands:
+                        addSensor           initiates procedure to add a new sensor to the system
+                        deactivateSensor    remove sensor from the system (sensor will be set inactive)
+                        printStates         prints all last reported sensor states
+                        printHistory        prints 50 most recent history entries
+                        """);
     }
 }

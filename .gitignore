@@ -5,3 +5,4 @@ CMakeListsPrivate.txt
 target
 *.class
 compile_commands.json
+localConfig
