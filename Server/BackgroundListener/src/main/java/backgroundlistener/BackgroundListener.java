@@ -11,9 +11,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class BackgroundListener {
-    private final Configuration configuration = new Configuration();
+    private final static Configuration configuration = new Configuration();
     
-    public void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException {
         boolean run = true;
         int serverPort = 57335;
         
@@ -38,17 +38,17 @@ public class BackgroundListener {
         }
     }
 
-    private boolean checkExit(String sensorMacAddress) {
+    private static boolean checkExit(String sensorMacAddress) {
         return sensorMacAddress.equals("exitListener");
     }
 
-    private void sendOKToSensor(Socket sensor) throws IOException {
+    private static void sendOKToSensor(Socket sensor) throws IOException {
         PrintWriter printWriter = new PrintWriter(sensor.getOutputStream());
         printWriter.println("OK");
         printWriter.flush();
     }
 
-    private void updateSensorState(String macAddress, String token, int state) {
+    private static void updateSensorState(String macAddress, String token, int state) {
         try (Connection databaseConnection = DriverManager.getConnection(configuration.getUrl(), configuration.getUsername(), configuration.getPassword())) {
             String query = "CALL windows.updateSensorState('" + macAddress + "', '" + token + "', " + state + ")";
             try (Statement call = databaseConnection.createStatement()) {
