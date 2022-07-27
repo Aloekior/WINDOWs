@@ -1,6 +1,7 @@
 package userinterface.objects;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.sql.*;
@@ -67,7 +68,9 @@ public class DatabaseConnection {
         String token;
 
         try (ServerSocket socket = new ServerSocket(serverPort)){
+            InetAddress localhost = InetAddress.getLocalHost();
             System.out.println("Waiting for new sensor to connect..");
+            System.out.println("Local IP Address : " + localhost.getHostAddress().trim());
             Socket sensor = socket.accept();
 
             BufferedReader sensorInput = new BufferedReader(new InputStreamReader(sensor.getInputStream()));
@@ -78,6 +81,8 @@ public class DatabaseConnection {
 
             token = getToken(macAddress);
             sendStringToSensor(token, sensor);
+            addSensorToDataBase(macAddress, token);
+            
 
             System.out.printf("Token sent to sensor: '%s'%n", token);
 
@@ -100,13 +105,21 @@ public class DatabaseConnection {
     
     private boolean checkToken(String token) {
         String procedure = "checkTokenExists";
-        return Boolean.parseBoolean(multiMethodCall(procedure, token));
+        String error = "checkToken FAILED";
+        return Boolean.parseBoolean(multiMethodCall(procedure, token, error));
     }
     
     private void sendStringToSensor(String token, Socket sensor) throws IOException {
         PrintWriter printWriter = new PrintWriter(sensor.getOutputStream());
         printWriter.println(token);
         printWriter.flush();
+    }
+    
+    private void addSensorToDataBase(String macAddress, String token) {
+        String procedure = "addSensor";
+        String databaseString = macAddress + "', '" + token;
+        String error = "addSensor FAILED";
+        multiMethodCall(procedure, databaseString, error);
     }
     
     public void removeSensor() {
@@ -139,12 +152,14 @@ public class DatabaseConnection {
     
     private String checkMac(String macAddress) {
         String procedure = "checkSensorExists";
-        return multiMethodCall(procedure, macAddress);
+        String error = "checkMac FAILED";
+        return multiMethodCall(procedure, macAddress, error);
     }
     
     private void deactivateSensorByMac(String macAddress) {
         String procedure = "deactivateSensorByMac";
-        multiMethodCall(procedure, macAddress);
+        String error = "deactivateSensorByMac FAILED";
+        multiMethodCall(procedure, macAddress, error);
     }
     
     public boolean checkRoomExists(String room) {
@@ -154,7 +169,8 @@ public class DatabaseConnection {
     
     private void deactivateSensorsByRoom(String room) {
         String procedure = "deactivateSensorsByRoom";
-        multiMethodCall(procedure, room);
+        String error = "deactivateSensorsByRoom FAILED";
+        multiMethodCall(procedure, room, error);
         System.out.printf("WARNING: ALL SENSORS IN ROOM '%s' DEACTIVATED!", room);
     }
     
@@ -170,15 +186,19 @@ public class DatabaseConnection {
         // TODO: implement method createUser() for user.isAdmin
     }
     
-    private String multiMethodCall(String procedure, String value) {
+    private String multiMethodCall(String procedure, String value, String error) {
         connect();
         try (Statement call = connection.createStatement()) {
             String query = "CALL windows."+ procedure + "('" + value + "')";
-            ResultSet token = call.executeQuery(query);
+            ResultSet databaseAnswer = call.executeQuery(query);
 
-            return token.getString(1);
+//            System.out.println(databaseAnswer.getString(1));
+//  TODO: fix retrieval of data from database
+//            return token.getString(1);
+            return "";
         } catch (SQLException e) {
-            System.out.println("Could not validate Mac Address");
+            System.out.println(error);
+            e.printStackTrace();
         } finally {
             disconnect();
         }

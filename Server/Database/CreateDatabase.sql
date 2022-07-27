@@ -24,9 +24,6 @@ CREATE USER 'serverListener' IDENTIFIED BY 'a8aKJFAL8%lo113ZZ&Bvm12g_$1!';
 GRANT EXECUTE ON PROCEDURE WINDOWs.updateSensorState TO 'serverListener';
 
 
-CREATE ROLE 'user';
-GRANT EXECUTE ON PROCEDURE WINDOWs.getRoomState TO 'user';
-
 CREATE ROLE 'serverAdmin';
 GRANT EXECUTE ON PROCEDURE WINDOWs.addSensor TO 'serverAdmin';
 GRANT EXECUTE ON PROCEDURE WINDOWs.changeSensorRoom TO 'serverAdmin';
@@ -34,9 +31,16 @@ GRANT EXECUTE ON PROCEDURE WINDOWs.deactivateSensorByMac TO 'serverAdmin';
 GRANT EXECUTE ON PROCEDURE WINDOWs.deactivateSensorsByRoom TO 'serverAdmin';
 GRANT EXECUTE ON PROCEDURE WINDOWs.checkTokenExists TO 'serverAdmin';
 GRANT EXECUTE ON PROCEDURE WINDOWs.checkSensorExists TO 'serverAdmin';
+GRANT EXECUTE ON PROCEDURE WINDOWs.addReadOnlyUser TO 'serverAdmin';
+
+/* TODO: create hook for serverAdmin during installation */
+
+
+CREATE ROLE 'user';
+GRANT EXECUTE ON PROCEDURE WINDOWs.getRoomState TO 'user';
+
 
 DELIMITER //
-
 
 /* FUNCTIONS */
 
@@ -142,19 +146,39 @@ CREATE PROCEDURE getRoomState (input_room VARCHAR(20))
         END IF;
     END //
 
+/*
 DROP PROCEDURE IF EXISTS addReadOnlyUser;
-CREATE PROCEDURE addReadOnlyUser(input_username VARCHAR(20), input_password VARCHAR(50))
+CREATE PROCEDURE addReadOnlyUser(input_username VARCHAR(32), input_password VARCHAR(50))
     BEGIN
-        @username = input_username;
-        @passphrase = input_password;
-        
         IF (checkDatabaseUserExists(@username)) THEN
             SELECT -1;
-        ELSE 
-            CREATE USER @username IDENTIFIED BY @passphrase;
-            GRANT 'user' TO @username; 
+        ELSE
+            CREATE USER input_username IDENTIFIED BY input_password;
+            GRANT 'user' TO input_username;
         END IF;
     END //
+*/
+
+/*
+DROP PROCEDURE IF EXISTS `add_User`;
+CREATE PROCEDURE `add_User`(IN `p_Name` VARCHAR(45), IN `p_Passw` VARCHAR(200))
+BEGIN
+    DECLARE `_HOST` CHAR(14) DEFAULT '@\'localhost\'';
+    SET `p_Name` := CONCAT('\'', REPLACE(TRIM(`p_Name`), CHAR(39), CONCAT(CHAR(92), CHAR(39))), '\''),
+        `p_Passw` := CONCAT('\'', REPLACE(`p_Passw`, CHAR(39), CONCAT(CHAR(92), CHAR(39))), '\'');
+    SET @`sql` := CONCAT('CREATE USER ', `p_Name`, `_HOST`, ' IDENTIFIED BY ', `p_Passw`);
+    PREPARE `stmt` FROM @`sql`;
+    EXECUTE `stmt`;
+    SET @`sql` := CONCAT('GRANT ALL PRIVILEGES ON *.* TO ', `p_Name`, `_HOST`);
+    PREPARE `stmt` FROM @`sql`;
+    EXECUTE `stmt`;
+    DEALLOCATE PREPARE `stmt`;
+    FLUSH PRIVILEGES;
+END //
+
+ */
+
+
 
 /* Multi-Functional-Procedures */
 
