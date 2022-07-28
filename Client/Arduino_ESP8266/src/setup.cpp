@@ -43,8 +43,10 @@ wifiSettings setupWiFi() {
   String password;
 
   do {
-    ssid = getStringFromSerial("Enter WiFi-SSID");
-    password = getStringFromSerial("Enter WiFi-password");
+    String comment = "Enter WiFi-SSID";
+    ssid = getStringFromSerial(&comment);
+    comment = "Enter WiFi-password";
+    password = getStringFromSerial(&comment);
   } while (!testWiFiConnection(&ssid, &password));
 
   return {ssid, password};
@@ -73,10 +75,11 @@ serverItems getServerToken() {
   int serverPort = 57336;
   unsigned long messageDelay = 50000;
   bool messageDisplay = false;
+  String comment = "Please enter server IP-address";
   IPAddress serverIP;
   WiFiClient serverConnection;
 
-  serverIP.fromString(getStringFromSerial("Please enter server IP-address"));
+  serverIP.fromString(getStringFromSerial(&comment));
   Serial.print("Server setup initiated... Connecting to ");
   Serial.println(serverIP);
 

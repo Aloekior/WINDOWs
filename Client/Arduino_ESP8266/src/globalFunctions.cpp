@@ -9,9 +9,9 @@ void prepareSerial() {
   Serial.readString();
 }
 
-String getStringFromSerial(String comment) {
+String getStringFromSerial(String* comment) {
   Serial.readString(); // clear Serial buffer before reading to discard leftovers
-  Serial.println(comment);
+  Serial.println(*comment);
   Serial.flush();
   while (Serial.available() == 0) {}
   return Serial.readStringUntil('\n'); // make sure Serial Monitor is set to end of line == LF (newline)

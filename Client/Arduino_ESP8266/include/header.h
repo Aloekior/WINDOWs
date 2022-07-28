@@ -17,11 +17,11 @@ struct serverItems {
 };
 
 struct eepromSettings {
-  unsigned int ssidLength;
+  int ssidLength;
   char ssid[31];
-  unsigned int passwordLength;
+  int passwordLength;
   char password[63];
-  unsigned int tokenLength;
+  int tokenLength;
   char token[37];
   byte ipAddress[4];
 };
@@ -59,7 +59,7 @@ wifiToken readSettingsFromEEPROM(int address);
 
 void prepareSerial();
 
-String getStringFromSerial(String comment);
+String getStringFromSerial(String* comment);
 
 bool testWiFiConnection(String *ssid, String *password);
 

@@ -3,7 +3,6 @@ package userinterface;
 import userinterface.objects.DatabaseConnection;
 import userinterface.objects.User;
 
-import java.util.Locale;
 import java.util.Scanner;
 
 public class Main {
@@ -19,10 +18,10 @@ public class Main {
                 System.out.print("\nPlease enter a command: ");
                 String command = scanner.nextLine();
                 switch (command.toLowerCase()) {
-                    case "add sensor" -> database.addSensor();
-                    case "deactivate sensor" -> database.deactivateSensor();
-                    case "change sensor room" -> database.changeSensorLocation(false);
-                    case "change sensor window" -> database.changeSensorLocation(true);
+                    case "add" -> database.addSensor();
+                    case "deactivate" -> database.deactivateSensor();
+                    case "change room" -> database.changeSensorLocation(false);
+                    case "change window" -> database.changeSensorLocation(true);
                     case "states" -> database.printCurrentStatesPrepareQuery(false);
                     case "room" -> database.printCurrentStatesPrepareQuery(true);
                     case "history" -> database.printHistory();
@@ -30,7 +29,7 @@ public class Main {
                     case "delete user" -> database.userOption(false);
                     case "exit" -> quitApplication = true;
                     default -> {
-                        System.out.println("Unknown command '" + command + "'\n");
+                        System.out.printf("Unknown command '%s'%n", command);
                         printHelp();
                     }
                 }
@@ -54,10 +53,10 @@ public class Main {
     public static void printHelp() {
         System.out.println("""
                         Available Commands:
-                        add                 (sensor) initiates procedure to add a new sensor to the system
-                        deactivate          (sensor) remove sensor from the system (will be set inactive)
-                        change room         allows to change a sensors assigned room name
-                        change window       like 'change room', just for window within a room
+                        add                 (ADMIN ONLY) initiates procedure to add a new sensor to the system
+                        deactivate          (ADMIN ONLY) remove sensor from the system (will be set inactive)
+                        change room         (ADMIN ONLY) allows to change a sensors assigned room name
+                        change window       (ADMIN ONLY) like 'change room', just for window within a room
                         states              prints all last reported sensor states
                         room                prints last reported sensor states assigned to the entered room only
                         history             prints 50 most recent history entries

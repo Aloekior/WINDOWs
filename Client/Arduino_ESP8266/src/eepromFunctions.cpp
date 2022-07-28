@@ -19,9 +19,9 @@ void clearEEPROM() {
 
 void storeSettingsInEEPROM(int address, wifiSettings *wifiInput, serverItems *serverItems) {
 
-  unsigned int l1 = wifiInput->ssid.length();
-  unsigned int l2 = wifiInput->password.length();
-  unsigned int l3 = serverItems->token.length();
+  int l1 = (int) wifiInput->ssid.length();
+  int l2 = (int) wifiInput->password.length();
+  int l3 = (int) serverItems->token.length();
   IPAddress ip = serverItems->ipAddress;
 
   eepromSettings set = {l1, {}, l2, {}, l3, {}, {ip[0], ip[1], ip[2], ip[3]}};
@@ -38,9 +38,8 @@ void storeSettingsInEEPROM(int address, wifiSettings *wifiInput, serverItems *se
 }
 
 wifiToken readSettingsFromEEPROM(int address) {
-  eepromSettings set;
+  eepromSettings set = EEPROM.get(address, set);
   EEPROM.begin(sizeof(eepromSettings));
-  EEPROM.get(address, set);
 
   String ssid = charToString(set.ssid, set.ssidLength);
   String password = charToString(set.password, set.passwordLength);

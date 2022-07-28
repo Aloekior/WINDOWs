@@ -11,12 +11,12 @@ import java.util.UUID;
 public class DatabaseConnection {
     private String url;
     private Connection connection;
-    private String filename = "localConfig";
     private User user;
     
     
     
     public DatabaseConnection() {
+        String filename = "localConfig";
         File config = new File(filename);
         
         try (Scanner fileInput = new Scanner(config)){
@@ -188,46 +188,41 @@ public class DatabaseConnection {
     
     public void printCurrentStatesPrepareQuery(boolean checkRoom) {
         String query;
+        int columnCount;
         
         if (!checkRoom) {
+            columnCount = 3;
             query = "CALL getSensorStates('')";
-            printStates(query, checkRoom);
+            printStates(query, columnCount);
         } else {
+            columnCount = 2;
             Scanner scanner = new Scanner(System.in);
             System.out.println("Please enter room name:");
             String room = scanner.nextLine();
             query = "CALL getSensorStates('" + room + "')";
-            printStates(query, checkRoom);
+            printStates(query, columnCount);
         }
         
         
     }
     
-    private void printStates(String query, boolean checkRoom) {
-        int columnCount;
-        
+    private void printStates(String query, int columnCount) {
         connect();
-        if (checkRoom) {
-            columnCount = 2;
-        } else {
-            columnCount = 3;
-        }
-        
         try (Statement call = connection.createStatement()) {
             ResultSet databaseAnswer = call.executeQuery(query);
 
             StringBuilder output = printDatabaseTable(databaseAnswer, columnCount);
             System.out.println(output);
         } catch (SQLException e) {
-            sqlError("Could not print states", e);
+            String error = "Could not print states";
+            sqlError(error, e);
         }
-        
         disconnect();
     }
     
     public void printHistory() {
         connect();
-        String query = "CALL getSensorHistory()";
+        String query = "CALL windows.getSensorHistory()";
         
         try (Statement call = connection.createStatement()) {
             ResultSet databaseAnswer = call.executeQuery(query);
@@ -237,7 +232,8 @@ public class DatabaseConnection {
             StringBuilder output = printDatabaseTable(databaseAnswer, columnCount);
             System.out.println(output);
         } catch (SQLException e) {
-            sqlError("Could not print states", e);
+            String error = "Could not print states";
+            sqlError(error, e);
         }
 
         disconnect();
