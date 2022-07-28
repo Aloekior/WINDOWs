@@ -50,19 +50,6 @@ public class DatabaseConnection {
         return noError;
     }
     
-    private boolean userIsAdminCheck() {
-        // TODO: implement userIsAdminCheck()
-        
-        String query = "SHOW GRANTS FOR '" + user.getUsername() + "'";
-        try (Statement grant = connection.createStatement()) {
-            ResultSet grants = grant.executeQuery(query);
-            
-        } catch (SQLException e) {
-            
-        }
-        return false;
-    }
-    
     public void addSensor() {
         int serverPort = 57336;
         String token;
@@ -81,8 +68,6 @@ public class DatabaseConnection {
 
             token = getToken(macAddress);
             sendStringToSensor(token, sensor);
-            addSensorToDataBase(macAddress, token);
-            
 
             System.out.printf("Token sent to sensor: '%s'%n", token);
 
@@ -99,8 +84,15 @@ public class DatabaseConnection {
             do {
                 token = UUID.randomUUID().toString();
             } while (checkToken(token));
+            addSensorToDataBase(macAddress, token);
         }
         return token;
+    }
+    
+    private String checkMac(String macAddress) {
+        String procedure = "checkSensorExists";
+        String error = "checkMac FAILED";
+        return multiMethodCall(procedure, macAddress, error);
     }
     
     private boolean checkToken(String token) {
@@ -109,17 +101,17 @@ public class DatabaseConnection {
         return Boolean.parseBoolean(multiMethodCall(procedure, token, error));
     }
     
-    private void sendStringToSensor(String token, Socket sensor) throws IOException {
-        PrintWriter printWriter = new PrintWriter(sensor.getOutputStream());
-        printWriter.println(token);
-        printWriter.flush();
-    }
-    
     private void addSensorToDataBase(String macAddress, String token) {
         String procedure = "addSensor";
         String databaseString = macAddress + "', '" + token;
         String error = "addSensor FAILED";
         multiMethodCall(procedure, databaseString, error);
+    }
+    
+    private void sendStringToSensor(String token, Socket sensor) throws IOException {
+        PrintWriter printWriter = new PrintWriter(sensor.getOutputStream());
+        printWriter.println(token);
+        printWriter.flush();
     }
     
     public void removeSensor() {
@@ -150,12 +142,6 @@ public class DatabaseConnection {
         return !Character.isLetter(input.charAt(2));
     }
     
-    private String checkMac(String macAddress) {
-        String procedure = "checkSensorExists";
-        String error = "checkMac FAILED";
-        return multiMethodCall(procedure, macAddress, error);
-    }
-    
     private void deactivateSensorByMac(String macAddress) {
         String procedure = "deactivateSensorByMac";
         String error = "deactivateSensorByMac FAILED";
@@ -163,8 +149,9 @@ public class DatabaseConnection {
     }
     
     public boolean checkRoomExists(String room) {
-        // TODO: implement method databaseCheckRoom()
-        return false;
+        String procedure = "checkSensorRoom";
+        String error = procedure + " failed";
+        return Boolean.parseBoolean(multiMethodCall(procedure, room, error));
     }
     
     private void deactivateSensorsByRoom(String room) {
@@ -182,8 +169,21 @@ public class DatabaseConnection {
         // TODO: implement method databasePrintHistory()
     }
     
-    public void createUser() {
-        // TODO: implement method createUser() for user.isAdmin
+    public void userOption(boolean create) {
+        Scanner scanner = new Scanner(System.in);
+        String procedure = "addReadOnlyUser";
+        String error = "Failed to perform action!\nAre you permitted to modify users?";
+        String password = "";
+        
+        System.out.println("Please enter username:");
+        String username = scanner.nextLine();
+        if (create) {
+            System.out.println("Please enter password for new user:");
+            password = scanner.nextLine();
+        }
+        
+        String value = username + "', '" + password;
+        multiMethodCall(procedure, value, error);
     }
     
     private String multiMethodCall(String procedure, String value, String error) {
@@ -191,11 +191,10 @@ public class DatabaseConnection {
         try (Statement call = connection.createStatement()) {
             String query = "CALL windows."+ procedure + "('" + value + "')";
             ResultSet databaseAnswer = call.executeQuery(query);
+            databaseAnswer.next();
 
-//            System.out.println(databaseAnswer.getString(1));
-//  TODO: fix retrieval of data from database
-//            return token.getString(1);
-            return "";
+            System.out.println(procedure + "successful");
+            return databaseAnswer.getString(1);
         } catch (SQLException e) {
             System.out.println(error);
             e.printStackTrace();
