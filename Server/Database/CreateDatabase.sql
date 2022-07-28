@@ -36,12 +36,12 @@ GRANT EXECUTE ON PROCEDURE WINDOWs.checkSensorExists TO 'serverAdmin';
 GRANT EXECUTE ON PROCEDURE WINDOWs.createRemoveUser TO 'serverAdmin';
 GRANT EXECUTE ON PROCEDURE WINDOWs.getRoomState TO 'serverAdmin';
 
-/* TODO: create hook for serverAdmin during installation */
 
 
 CREATE ROLE 'windowsUser';
 GRANT EXECUTE ON PROCEDURE WINDOWs.getRoomState TO 'windowsUser';
 
+/* TODO: create hook for windowsadmin during installation */
 CREATE USER 'windowsadmin' IDENTIFIED BY 'password';
 GRANT 'serverAdmin' TO 'windowsadmin';
 
@@ -144,18 +144,24 @@ BEGIN
     END IF;
 END //
 
-DROP PROCEDURE IF EXISTS getRoomState;
-CREATE PROCEDURE getRoomState (input_room VARCHAR(20))
+DROP PROCEDURE IF EXISTS getSensorStates;
+CREATE PROCEDURE getSensorStates(input_room VARCHAR(20))
     BEGIN
-        IF (checkSensorRoom(input_room)) THEN
-            SELECT h.history_state FROM window_history h LEFT JOIN sensors s ON h.sensor_mac = s.sensor_mac WHERE s.sensor_room = input_room;
+        IF (input_room = '') THEN
+           SELECT sensor_room, sensor_room_window, sensor_current_state FROM sensors;
+        ELSE
+            IF (checkSensorRoom(input_room)) THEN
+                SELECT sensor_room_window, sensor_current_state FROM sensors WHERE sensor_room = input_room;
+            ELSE
+                SELECT 'Invalid room selected', '';
+            END IF;
         END IF;
     END //
-
-DROP PROCEDURE IF EXISTS getStates;
-CREATE PROCEDURE getStates()
+    
+DROP PROCEDURE IF EXISTS getSensorHistory;
+CREATE PROCEDURE getSensorHistory()
     BEGIN 
-       SELECT sensor_room, sensor_current_state FROM sensors; 
+        SELECT s.sensor_room, s.sensor_room_window, h.history_timestamp, h.history_state FROM sensors s LEFT JOIN window_history h ON s.sensor_mac = h.sensor_mac LIMIT 50;
     END //
 
 /* Multi-Functional-Procedures */
@@ -180,7 +186,7 @@ DROP PROCEDURE IF EXISTS checkTokenExists;
 CREATE PROCEDURE checkTokenExists (input_token VARCHAR(36))
     BEGIN 
         IF (checkSensorToken(input_token)) THEN
-           SELECT 1;
+            SELECT 1;
         ELSE
             SELECT 0;
         END IF;
