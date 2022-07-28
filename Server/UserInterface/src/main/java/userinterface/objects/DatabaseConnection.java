@@ -36,9 +36,9 @@ public class DatabaseConnection {
         this.user = user;
         if (connect()) {
             user.isValid(true);
+            disconnect();
+            System.out.printf("Successfully connected to database using '%s'%n", user.getUsername());
         }
-        disconnect();
-        System.out.printf("Successfully connected to database using '%s'%n", user.getUsername());
     }
     
     private boolean connect() {
@@ -248,9 +248,11 @@ public class DatabaseConnection {
         while (databaseAnswer.next()) {
             for (int i = 1; i <= columnCount; i++) {
                 output.append(databaseAnswer.getString(i));
-                if (i != columnCount) {
-                    output.append("\t\t");
-                } else {
+                if (i < columnCount -1) {
+                    output.append(", ");
+                } else if (i == columnCount -1) {
+                    output.append(":");
+                } else { // i == columnCount
                     output.append("\n");
                 }
             }
@@ -300,7 +302,7 @@ public class DatabaseConnection {
         try {
             connection.close();
         } catch (SQLException e) {
-            System.out.println("Could not disconnect from database");
+            sqlError("Could not disconnect from database",e);
         }
     }
 }
