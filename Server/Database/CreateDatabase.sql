@@ -5,8 +5,10 @@ CREATE TABLE IF NOT EXISTS sensors (
     sensor_mac VARCHAR(17) UNIQUE NOT NULL,
     sensor_token VARCHAR(36) UNIQUE NOT NULL,
     sensor_room VARCHAR(20),
+    sensor_room_window VARCHAR(10) UNIQUE,
     sensor_active BOOLEAN DEFAULT 0,
-    PRIMARY KEY (sensor_token)
+    sensor_current_state BOOLEAN DEFAULT 0,
+    PRIMARY KEY (sensor_mac)
 );
 
 CREATE TABLE IF NOT EXISTS window_history (
@@ -31,14 +33,17 @@ GRANT EXECUTE ON PROCEDURE WINDOWs.deactivateSensorByMac TO 'serverAdmin';
 GRANT EXECUTE ON PROCEDURE WINDOWs.deactivateSensorsByRoom TO 'serverAdmin';
 GRANT EXECUTE ON PROCEDURE WINDOWs.checkTokenExists TO 'serverAdmin';
 GRANT EXECUTE ON PROCEDURE WINDOWs.checkSensorExists TO 'serverAdmin';
-GRANT EXECUTE ON PROCEDURE WINDOWs.addReadOnlyUser TO 'serverAdmin';
+GRANT EXECUTE ON PROCEDURE WINDOWs.createRemoveUser TO 'serverAdmin';
+GRANT EXECUTE ON PROCEDURE WINDOWs.getRoomState TO 'serverAdmin';
 
 /* TODO: create hook for serverAdmin during installation */
 
 
-CREATE ROLE 'user';
-GRANT EXECUTE ON PROCEDURE WINDOWs.getRoomState TO 'user';
+CREATE ROLE 'windowsUser';
+GRANT EXECUTE ON PROCEDURE WINDOWs.getRoomState TO 'windowsUser';
 
+CREATE USER 'windowsadmin' IDENTIFIED BY 'password';
+GRANT 'serverAdmin' TO 'windowsadmin';
 
 DELIMITER //
 
@@ -94,18 +99,10 @@ CREATE FUNCTION sensorUpdateRequired(input_mac VARCHAR(17), input_state INT) RET
         END IF;
         RETURN 1;
     END //
-
-DROP FUNCTION IF EXISTS checkDatabaseUserExists;
-CREATE FUNCTION checkDatabaseUserExists(input_name VARCHAR(32)) RETURNS INT
-    BEGIN 
-        IF ((SELECT COUNT(User) FROM mysql.user WHERE User = input_name) > 0) THEN
-            RETURN 1;
-        END IF;
-        RETURN 0;
-    END //
-
+    
 
 /* PROCEDURES */
+
 
 DROP PROCEDURE IF EXISTS updateSensorState;
 CREATE PROCEDURE updateSensorState (input_mac VARCHAR(17), input_token VARCHAR(36), input_state BOOLEAN)
@@ -116,13 +113,14 @@ CREATE PROCEDURE updateSensorState (input_mac VARCHAR(17), input_token VARCHAR(3
             END IF;
             IF (sensorUpdateRequired(input_mac,input_state) = 1) THEN
                 INSERT INTO window_history (sensor_mac, history_state) VALUES (input_mac, input_state);
+                UPDATE sensors SET sensor_current_state = input_state WHERE sensor_mac = input_mac;
             END IF;
             SELECT 0;
         ELSE
             SELECT -1;
         END IF;
     END //
-
+    
 DROP PROCEDURE IF EXISTS addSensor;
 CREATE PROCEDURE addSensor (input_mac VARCHAR(17), input_token VARCHAR(36))
     BEGIN
@@ -138,6 +136,14 @@ CREATE PROCEDURE changeSensorRoom (input_mac VARCHAR(17), input_room VARCHAR(20)
         END IF;
     END //
 
+DROP PROCEDURE IF EXISTS changeSensorWindow;
+CREATE PROCEDURE changeSensorWindow (input_mac VARCHAR(17), input_room_window VARCHAR(10))
+BEGIN
+    IF (checkSensorMac(input_mac)) THEN
+        UPDATE sensors SET sensor_room_window = input_room_window WHERE sensor_mac = input_mac;
+    END IF;
+END //
+
 DROP PROCEDURE IF EXISTS getRoomState;
 CREATE PROCEDURE getRoomState (input_room VARCHAR(20))
     BEGIN
@@ -146,39 +152,11 @@ CREATE PROCEDURE getRoomState (input_room VARCHAR(20))
         END IF;
     END //
 
-/*
-DROP PROCEDURE IF EXISTS addReadOnlyUser;
-CREATE PROCEDURE addReadOnlyUser(input_username VARCHAR(32), input_password VARCHAR(50))
-    BEGIN
-        IF (checkDatabaseUserExists(@username)) THEN
-            SELECT -1;
-        ELSE
-            CREATE USER input_username IDENTIFIED BY input_password;
-            GRANT 'user' TO input_username;
-        END IF;
+DROP PROCEDURE IF EXISTS getStates;
+CREATE PROCEDURE getStates()
+    BEGIN 
+       SELECT sensor_room, sensor_current_state FROM sensors; 
     END //
-*/
-
-/*
-DROP PROCEDURE IF EXISTS `add_User`;
-CREATE PROCEDURE `add_User`(IN `p_Name` VARCHAR(45), IN `p_Passw` VARCHAR(200))
-BEGIN
-    DECLARE `_HOST` CHAR(14) DEFAULT '@\'localhost\'';
-    SET `p_Name` := CONCAT('\'', REPLACE(TRIM(`p_Name`), CHAR(39), CONCAT(CHAR(92), CHAR(39))), '\''),
-        `p_Passw` := CONCAT('\'', REPLACE(`p_Passw`, CHAR(39), CONCAT(CHAR(92), CHAR(39))), '\'');
-    SET @`sql` := CONCAT('CREATE USER ', `p_Name`, `_HOST`, ' IDENTIFIED BY ', `p_Passw`);
-    PREPARE `stmt` FROM @`sql`;
-    EXECUTE `stmt`;
-    SET @`sql` := CONCAT('GRANT ALL PRIVILEGES ON *.* TO ', `p_Name`, `_HOST`);
-    PREPARE `stmt` FROM @`sql`;
-    EXECUTE `stmt`;
-    DEALLOCATE PREPARE `stmt`;
-    FLUSH PRIVILEGES;
-END //
-
- */
-
-
 
 /* Multi-Functional-Procedures */
 
@@ -194,7 +172,7 @@ DROP PROCEDURE IF EXISTS deactivateSensorsByRoom;
 CREATE PROCEDURE deactivateSensorsByRoom (input_room VARCHAR(20))
 BEGIN
     IF (checkSensorRoom(input_room)) THEN
-        UPDATE sensors SET sensor_room = NULL, sensor_active = 0 WHERE sensor_room = input_room;
+        UPDATE sensors SET sensor_room = NULL, sensor_room_window = NULL, sensor_active = 0 WHERE sensor_room = input_room;
     END IF;
 END //
 
@@ -215,6 +193,32 @@ CREATE PROCEDURE checkSensorExists (input_mac VARCHAR(17))
             SELECT sensor_token FROM sensors WHERE sensor_mac = input_mac;
         ELSE
             SELECT '';
+        END IF;
+    END //
+
+DROP PROCEDURE IF EXISTS createRemoveUser;
+CREATE PROCEDURE createRemoveUser(IN input_username VARCHAR(32), IN input_password VARCHAR(200))
+    BEGIN
+        IF (SELECT COUNT(User) FROM mysql.user WHERE User = input_username > 0) THEN
+            SELECT -1;
+            IF (input_password = '') THEN
+                SET @`username` := CONCAT('\'', input_username, '\'');
+                DROP USER @`username`;
+                SELECT 0;
+            END IF;
+        ELSE
+            SET @`username` := CONCAT('\'', input_username, '\''),
+                @`password` := CONCAT('\'', input_password, '\'');
+            SET @`create` := CONCAT('CREATE USER ', @`username`, ' IDENTIFIED BY ', @`password`);
+            PREPARE `createUser` FROM @`create`;
+            EXECUTE `createUser`;
+            DEALLOCATE PREPARE `createUser`;
+            SET @`grant` := CONCAT('GRANT \'windowsUser\' TO ', @`username`);
+            PREPARE `grantPrivileges` FROM @`grant`;
+            EXECUTE `grantPrivileges`;
+            DEALLOCATE PREPARE `grantPrivileges`;
+            FLUSH PRIVILEGES;
+            SELECT 0;
         END IF;
     END //
 
