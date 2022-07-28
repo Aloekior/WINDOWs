@@ -14,6 +14,8 @@ public class DatabaseConnection {
     private String filename = "localConfig";
     private User user;
     
+    
+    
     public DatabaseConnection() {
         File config = new File(filename);
         
@@ -114,7 +116,7 @@ public class DatabaseConnection {
         printWriter.flush();
     }
     
-    public void removeSensor() {
+    public void deactivateSensor() {
         Scanner scanner = new Scanner(System.in);
         System.out.println("""
                         Options to deactivate sensor by:
@@ -148,7 +150,7 @@ public class DatabaseConnection {
         multiMethodCall(procedure, macAddress, error);
     }
     
-    public boolean checkRoomExists(String room) {
+    private boolean checkRoomExists(String room) {
         String procedure = "checkSensorRoom";
         String error = procedure + " failed";
         return Boolean.parseBoolean(multiMethodCall(procedure, room, error));
@@ -161,14 +163,101 @@ public class DatabaseConnection {
         System.out.printf("WARNING: ALL SENSORS IN ROOM '%s' DEACTIVATED!", room);
     }
     
-    public void printCurrentStates() {
-        // TODO: implement method databasePrintCurrentStates()
+    public void changeSensorLocation(boolean window) {
+        String macAddress = getStringFromInput("Please enter Sensor MAC address:");
+        String procedure;
+        String location;
+        if (window) {
+            procedure = "changeSensorWindow";
+            location = getStringFromInput("Please enter window name:");
+        } else {
+            procedure = "changeSensorRoom";
+            location = getStringFromInput("Please enter room name:");
+        }
+        String value = macAddress + "', '" + location;
+        String error = procedure + " failed";
+        
+        multiMethodCall(procedure,value,error);
+    }
+    
+    private String getStringFromInput(String comment) {
+        Scanner input = new Scanner(System.in);
+        System.out.println(comment);
+        return input.nextLine();
+    }
+    
+    public void printCurrentStatesPrepareQuery(boolean checkRoom) {
+        String query;
+        
+        if (!checkRoom) {
+            query = "CALL getSensorStates('')";
+            printStates(query, checkRoom);
+        } else {
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("Please enter room name:");
+            String room = scanner.nextLine();
+            query = "CALL getSensorStates('" + room + "')";
+            printStates(query, checkRoom);
+        }
+        
+        
+    }
+    
+    private void printStates(String query, boolean checkRoom) {
+        int columnCount;
+        
+        connect();
+        if (checkRoom) {
+            columnCount = 2;
+        } else {
+            columnCount = 3;
+        }
+        
+        try (Statement call = connection.createStatement()) {
+            ResultSet databaseAnswer = call.executeQuery(query);
+
+            StringBuilder output = printDatabaseTable(databaseAnswer, columnCount);
+            System.out.println(output);
+        } catch (SQLException e) {
+            sqlError("Could not print states", e);
+        }
+        
+        disconnect();
     }
     
     public void printHistory() {
-        // TODO: implement method databasePrintHistory()
+        connect();
+        String query = "CALL getSensorHistory()";
+        
+        try (Statement call = connection.createStatement()) {
+            ResultSet databaseAnswer = call.executeQuery(query);
+            
+            int columnCount = databaseAnswer.getMetaData().getColumnCount();
+
+            StringBuilder output = printDatabaseTable(databaseAnswer, columnCount);
+            System.out.println(output);
+        } catch (SQLException e) {
+            sqlError("Could not print states", e);
+        }
+
+        disconnect();
     }
-    
+
+    private StringBuilder printDatabaseTable(ResultSet databaseAnswer, int columnCount) throws SQLException {
+        StringBuilder output = new StringBuilder();
+        while (databaseAnswer.next()) {
+            for (int i = 1; i <= columnCount; i++) {
+                output.append(databaseAnswer.getString(i));
+                if (i != columnCount) {
+                    output.append("\t\t");
+                } else {
+                    output.append("\n");
+                }
+            }
+        }
+        return output;
+    }
+
     public void userOption(boolean create) {
         Scanner scanner = new Scanner(System.in);
         String procedure = "addReadOnlyUser";
@@ -196,14 +285,17 @@ public class DatabaseConnection {
             System.out.println(procedure + "successful");
             return databaseAnswer.getString(1);
         } catch (SQLException e) {
-            System.out.println(error);
-            e.printStackTrace();
-        } finally {
-            disconnect();
+            sqlError(error, e);
         }
+        disconnect();
         return "";
     }
-    
+
+    private void sqlError(String error, SQLException e) {
+        System.out.println(error);
+        e.printStackTrace();
+    }
+
     private void disconnect() {
         try {
             connection.close();
