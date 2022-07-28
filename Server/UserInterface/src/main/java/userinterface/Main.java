@@ -22,7 +22,8 @@ public class Main {
                     case "deactivateSensor" -> database.removeSensor();
                     case "printStates" -> database.printCurrentStates();
                     case "printHistory" -> database.printHistory();
-                    case "createUser" -> database.createUser();
+                    case "createUser" -> database.userOption(true);
+                    case "deleteUser" -> database.userOption(false);
                     case "exit" -> quitApplication = true;
                     default -> {
                         System.out.println("Unknown command '" + command + "'\n");
@@ -53,6 +54,7 @@ public class Main {
                         deactivateSensor    remove sensor from the system (sensor will be set inactive)
                         printStates         prints all last reported sensor states
                         printHistory        prints 50 most recent history entries
+                        createUser          (ADMIN ONLY) Create new read-sensors-only database user
                         """);
     }
 }
