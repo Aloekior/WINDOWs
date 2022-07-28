@@ -19,15 +19,18 @@ public class Main {
                 String command = scanner.nextLine();
                 switch (command) {
                     case "addSensor" -> database.addSensor();
-                    case "deactivateSensor" -> database.removeSensor();
-                    case "printStates" -> database.printCurrentStates();
+                    case "deactivateSensor" -> database.deactivateSensor();
+                    case "changeSensorRoom" -> database.changeSensorLocation(false);
+                    case "changeSensorWindow" -> database.changeSensorLocation(true);
+                    case "printStates" -> database.printCurrentStatesPrepareQuery(false);
+                    case "printRoom" -> database.printCurrentStatesPrepareQuery(true);
                     case "printHistory" -> database.printHistory();
                     case "createUser" -> database.userOption(true);
                     case "deleteUser" -> database.userOption(false);
                     case "exit" -> quitApplication = true;
                     default -> {
                         System.out.println("Unknown command '" + command + "'\n");
-                        displayHelp();
+                        printHelp();
                     }
                 }
             }
@@ -47,14 +50,19 @@ public class Main {
         return database;
     }
 
-    public static void displayHelp() {
+    public static void printHelp() {
         System.out.println("""
                         Available Commands:
                         addSensor           initiates procedure to add a new sensor to the system
                         deactivateSensor    remove sensor from the system (sensor will be set inactive)
+                        changeSensorRoom    allows to change a sensors assigned room name
+                        changeSensorWindow  like changeRoom, just for window within a room
                         printStates         prints all last reported sensor states
+                        printRoom           prints last reported sensor states assigned to the entered room only
                         printHistory        prints 50 most recent history entries
                         createUser          (ADMIN ONLY) Create new read-sensors-only database user
+                        deleteUser          (ADMIN ONLY) Delete read-sensors-only database user
+                        exit                quit application
                         """);
     }
 }
