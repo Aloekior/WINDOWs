@@ -6,7 +6,6 @@ public class User {
     private String username;
     private String password;
     private boolean isValid = false;
-    private boolean isAdmin;
     
     public User() {
         Scanner scanner = new Scanner(System.in);
