@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS sensors (
     sensor_mac VARCHAR(17) UNIQUE NOT NULL,
     sensor_token VARCHAR(36) UNIQUE NOT NULL,
     sensor_room VARCHAR(20),
-    sensor_room_window VARCHAR(10) UNIQUE,
+    sensor_window VARCHAR(10) UNIQUE,
     sensor_active BOOLEAN DEFAULT 0,
     sensor_current_state BOOLEAN DEFAULT 0,
     PRIMARY KEY (sensor_mac)
@@ -25,21 +25,24 @@ CREATE TABLE IF NOT EXISTS window_history (
 CREATE USER 'serverListener' IDENTIFIED BY 'a8aKJFAL8%lo113ZZ&Bvm12g_$1!';
 GRANT EXECUTE ON PROCEDURE WINDOWs.updateSensorState TO 'serverListener';
 
+DROP ROLE IF EXISTS windowsuser;
+CREATE ROLE windowsuser;
+GRANT EXECUTE ON PROCEDURE WINDOWs.getSensorStates TO windowsuser;
+GRANT EXECUTE ON PROCEDURE WINDOWs.getSensorHistory TO windowsuser;
 
-CREATE ROLE 'serverAdmin';
-GRANT EXECUTE ON PROCEDURE WINDOWs.addSensor TO 'serverAdmin';
-GRANT EXECUTE ON PROCEDURE WINDOWs.changeSensorRoom TO 'serverAdmin';
-GRANT EXECUTE ON PROCEDURE WINDOWs.deactivateSensorByMac TO 'serverAdmin';
-GRANT EXECUTE ON PROCEDURE WINDOWs.deactivateSensorsByRoom TO 'serverAdmin';
-GRANT EXECUTE ON PROCEDURE WINDOWs.checkTokenExists TO 'serverAdmin';
-GRANT EXECUTE ON PROCEDURE WINDOWs.checkSensorExists TO 'serverAdmin';
-GRANT EXECUTE ON PROCEDURE WINDOWs.createRemoveUser TO 'serverAdmin';
-GRANT EXECUTE ON PROCEDURE WINDOWs.getRoomState TO 'serverAdmin';
+DROP ROLE IF EXISTS windowsadmin;
+CREATE ROLE windowsadmin;
+GRANT windowsuser TO windowsadmin;
+GRANT EXECUTE ON PROCEDURE WINDOWs.addSensor TO windowsadmin;
+GRANT EXECUTE ON PROCEDURE WINDOWs.changeSensorRoom TO windowsadmin;
+GRANT EXECUTE ON PROCEDURE WINDOWs.changeSensorWindow TO windowsadmin;
+GRANT EXECUTE ON PROCEDURE WINDOWs.deactivateSensorByMac TO windowsadmin;
+GRANT EXECUTE ON PROCEDURE WINDOWs.deactivateSensorsByRoom TO windowsadmin;
+GRANT EXECUTE ON PROCEDURE WINDOWs.checkTokenExists TO windowsadmin;
+GRANT EXECUTE ON PROCEDURE WINDOWs.checkSensorExists TO windowsadmin;
+GRANT EXECUTE ON PROCEDURE WINDOWs.createRemoveUser TO windowsadmin;
 
 
-
-CREATE ROLE 'windowsUser';
-GRANT EXECUTE ON PROCEDURE WINDOWs.getRoomState TO 'windowsUser';
 
 /* TODO: create hook for windowsadmin during installation */
 CREATE USER 'windowsadmin' IDENTIFIED BY 'password';
@@ -133,25 +136,29 @@ CREATE PROCEDURE changeSensorRoom (input_mac VARCHAR(17), input_room VARCHAR(20)
     BEGIN
         IF (checkSensorMac(input_mac)) THEN
             UPDATE sensors SET sensor_room = input_room WHERE sensor_mac = input_mac;
+            SELECT 0;
         END IF;
+        SELECT -1;
     END //
 
 DROP PROCEDURE IF EXISTS changeSensorWindow;
 CREATE PROCEDURE changeSensorWindow (input_mac VARCHAR(17), input_room_window VARCHAR(10))
 BEGIN
     IF (checkSensorMac(input_mac)) THEN
-        UPDATE sensors SET sensor_room_window = input_room_window WHERE sensor_mac = input_mac;
+        UPDATE sensors SET sensor_window = input_room_window WHERE sensor_mac = input_mac;
+        SELECT 0;
     END IF;
+    SELECT -1;
 END //
 
 DROP PROCEDURE IF EXISTS getSensorStates;
 CREATE PROCEDURE getSensorStates(input_room VARCHAR(20))
     BEGIN
         IF (input_room = '') THEN
-           SELECT sensor_room, sensor_room_window, sensor_current_state FROM sensors;
+           SELECT sensor_room, sensor_window, sensor_current_state FROM sensors;
         ELSE
             IF (checkSensorRoom(input_room)) THEN
-                SELECT sensor_room_window, sensor_current_state FROM sensors WHERE sensor_room = input_room;
+                SELECT sensor_window, sensor_current_state FROM sensors WHERE sensor_room = input_room;
             ELSE
                 SELECT 'Invalid room selected', '';
             END IF;
@@ -161,7 +168,7 @@ CREATE PROCEDURE getSensorStates(input_room VARCHAR(20))
 DROP PROCEDURE IF EXISTS getSensorHistory;
 CREATE PROCEDURE getSensorHistory()
     BEGIN 
-        SELECT s.sensor_room, s.sensor_room_window, h.history_timestamp, h.history_state FROM sensors s LEFT JOIN window_history h ON s.sensor_mac = h.sensor_mac LIMIT 50;
+        SELECT s.sensor_room, s.sensor_window, h.history_timestamp, h.history_state FROM sensors s LEFT JOIN window_history h ON s.sensor_mac = h.sensor_mac LIMIT 50;
     END //
 
 /* Multi-Functional-Procedures */
@@ -171,15 +178,19 @@ CREATE PROCEDURE deactivateSensorByMac (input_mac VARCHAR(17))
 BEGIN
     IF (checkSensorMac(input_mac)) THEN
         UPDATE sensors SET sensor_room = NULL, sensor_active = 0 WHERE sensor_mac = input_mac;
+        SELECT 0;
     END IF;
+    SELECT -1;
 END //
 
 DROP PROCEDURE IF EXISTS deactivateSensorsByRoom;
 CREATE PROCEDURE deactivateSensorsByRoom (input_room VARCHAR(20))
 BEGIN
     IF (checkSensorRoom(input_room)) THEN
-        UPDATE sensors SET sensor_room = NULL, sensor_room_window = NULL, sensor_active = 0 WHERE sensor_room = input_room;
+        UPDATE sensors SET sensor_room = NULL, sensor_window = NULL, sensor_active = 0 WHERE sensor_room = input_room;
+        SELECT 0;
     END IF;
+    SELECT -1;
 END //
 
 DROP PROCEDURE IF EXISTS checkTokenExists;
@@ -203,26 +214,41 @@ CREATE PROCEDURE checkSensorExists (input_mac VARCHAR(17))
     END //
 
 DROP PROCEDURE IF EXISTS createRemoveUser;
-CREATE PROCEDURE createRemoveUser(IN input_username VARCHAR(32), IN input_password VARCHAR(200))
+CREATE PROCEDURE createRemoveUser(IN input_username VARCHAR(32), IN input_password VARCHAR(200), isAdmin BOOLEAN)
     BEGIN
+        SET @`username` := CONCAT('\'', input_username, '\''),
+            @`password` := CONCAT('\'', input_password, '\'');
         IF (SELECT COUNT(User) FROM mysql.user WHERE User = input_username > 0) THEN
             SELECT -1;
             IF (input_password = '') THEN
-                SET @`username` := CONCAT('\'', input_username, '\'');
-                DROP USER @`username`;
+                SET @`dropUser` := CONCAT('DROP USER ', @`username`);
+                PREPARE `dropUser` FROM @`dropUser`;
+                EXECUTE `dropUser`;
+                DEALLOCATE PREPARE `dropUser`;
                 SELECT 0;
             END IF;
         ELSE
-            SET @`username` := CONCAT('\'', input_username, '\''),
-                @`password` := CONCAT('\'', input_password, '\'');
             SET @`create` := CONCAT('CREATE USER ', @`username`, ' IDENTIFIED BY ', @`password`);
             PREPARE `createUser` FROM @`create`;
             EXECUTE `createUser`;
             DEALLOCATE PREPARE `createUser`;
-            SET @`grant` := CONCAT('GRANT \'windowsUser\' TO ', @`username`);
+            
+            IF (isAdmin) THEN
+                SET @`role` := 'windowsadmin';
+            ELSE
+                SET @`role` := 'windowsuser';
+            END IF;
+            
+            SET @`grant` := CONCAT('GRANT ', @`role` ,' TO ', @`username`);
             PREPARE `grantPrivileges` FROM @`grant`;
             EXECUTE `grantPrivileges`;
             DEALLOCATE PREPARE `grantPrivileges`;
+            
+            SET @`defaultRole` := CONCAT('SET DEFAULT ROLE ', @`role` ,' FOR ', @`username`);
+            PREPARE `setDefaultRole` FROM @`defaultRole`;
+            EXECUTE `setDefaultRole`;
+            DEALLOCATE PREPARE `setDefaultRole`;
+            
             FLUSH PRIVILEGES;
             SELECT 0;
         END IF;
