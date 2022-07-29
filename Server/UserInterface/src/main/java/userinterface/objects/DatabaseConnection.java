@@ -8,6 +8,8 @@ import java.sql.*;
 import java.util.Scanner;
 import java.util.UUID;
 
+import static userinterface.UiSetup.runUiSetup;
+
 public class DatabaseConnection {
     private String url;
     private Connection connection;
@@ -20,14 +22,23 @@ public class DatabaseConnection {
         File config = new File(filename);
         
         try (Scanner fileInput = new Scanner(config)){
-            while (fileInput.hasNextLine()) {
-                this.url = fileInput.nextLine();
-            }
+            readUrl(fileInput);
         } catch (FileNotFoundException e) {
-            System.out.println("Configuration file not found!");
+            runUiSetup();
+            try (Scanner fileInput = new Scanner(config)){
+                readUrl(fileInput);
+            } catch (FileNotFoundException f) {
+                System.out.println("Problem with file 'localConfig'");
+            }
         }
     }
-    
+
+    private void readUrl(Scanner fileInput) {
+        while (fileInput.hasNextLine()) {
+            this.url = fileInput.nextLine();
+        }
+    }
+
     public boolean databaseUserValid() {
         return this.user.isValid();
     }
@@ -64,7 +75,7 @@ public class DatabaseConnection {
 
             BufferedReader sensorInput = new BufferedReader(new InputStreamReader(sensor.getInputStream()));
 
-            String macAddress = sensorInput.readLine();
+            String macAddress = sensorInput.readLine().toLowerCase();
 
             System.out.println("Connected to: " + macAddress);
 
@@ -117,13 +128,13 @@ public class DatabaseConnection {
     }
     
     public void deactivateSensor() {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("""
+        String comment = """
                         Options to deactivate sensor by:
-                        - macAddress
-                        - roomName
-                        """);
-        String sensorToRemove = scanner.nextLine();
+                        - MAC Address (aa:bb:cc:dd:ee:ff)
+                        - Room name (alphabetical)
+                        
+                        Please enter MAC or room:""";
+        String sensorToRemove = getStringFromInput(comment);
 
         if (isMacAddress(sensorToRemove)) {
             if (checkMac(sensorToRemove).equals("")) {
@@ -132,14 +143,16 @@ public class DatabaseConnection {
                 deactivateSensorByMac(sensorToRemove);
             }
         } else {
-            if (!checkRoomExists(sensorToRemove)) {
-                System.out.println("Room name does not exist in database!");
-            } else {
-                deactivateSensorsByRoom(sensorToRemove);
-            }
+            deactivateSensorsByRoom(sensorToRemove);
         }
     }
 
+    private String getStringFromInput(String comment) {
+        Scanner input = new Scanner(System.in);
+        System.out.print(comment);
+        return input.nextLine().toLowerCase();
+    }
+    
     private boolean isMacAddress(String input) {
         return !Character.isLetter(input.charAt(2));
     }
@@ -150,12 +163,6 @@ public class DatabaseConnection {
         multiMethodCall(procedure, macAddress, error);
     }
     
-    private boolean checkRoomExists(String room) {
-        String procedure = "checkSensorRoom";
-        String error = procedure + " failed";
-        return Boolean.parseBoolean(multiMethodCall(procedure, room, error));
-    }
-    
     private void deactivateSensorsByRoom(String room) {
         String procedure = "deactivateSensorsByRoom";
         String error = "deactivateSensorsByRoom FAILED";
@@ -164,26 +171,20 @@ public class DatabaseConnection {
     }
     
     public void changeSensorLocation(boolean window) {
-        String macAddress = getStringFromInput("Please enter Sensor MAC address:");
+        String macAddress = getStringFromInput("Please enter Sensor MAC address: ");
         String procedure;
         String location;
         if (window) {
             procedure = "changeSensorWindow";
-            location = getStringFromInput("Please enter window name:");
+            location = getStringFromInput("Please enter window name: ");
         } else {
             procedure = "changeSensorRoom";
-            location = getStringFromInput("Please enter room name:");
+            location = getStringFromInput("Please enter room name: ");
         }
         String value = macAddress + "', '" + location;
         String error = procedure + " failed";
         
         multiMethodCall(procedure,value,error);
-    }
-    
-    private String getStringFromInput(String comment) {
-        Scanner input = new Scanner(System.in);
-        System.out.println(comment);
-        return input.nextLine();
     }
     
     public void printCurrentStatesPrepareQuery(boolean checkRoom) {
@@ -192,18 +193,14 @@ public class DatabaseConnection {
         
         if (!checkRoom) {
             columnCount = 3;
-            query = "CALL getSensorStates('')";
+            query = "CALL windows.getSensorStates('')";
             printStates(query, columnCount);
         } else {
             columnCount = 2;
-            Scanner scanner = new Scanner(System.in);
-            System.out.println("Please enter room name:");
-            String room = scanner.nextLine();
-            query = "CALL getSensorStates('" + room + "')";
+            String room = getStringFromInput("Please enter room name: ");
+            query = "CALL windows.getSensorStates('" + room + "')";
             printStates(query, columnCount);
         }
-        
-        
     }
     
     private void printStates(String query, int columnCount) {
@@ -257,19 +254,23 @@ public class DatabaseConnection {
     }
 
     public void userOption(boolean create) {
-        Scanner scanner = new Scanner(System.in);
-        String procedure = "addReadOnlyUser";
+        String procedure = "createRemoveUser";
         String error = "Failed to perform action!\nAre you permitted to modify users?";
         String password = "";
+        int isAdmin = 0;
         
-        System.out.println("Please enter username:");
-        String username = scanner.nextLine();
+        String username = getStringFromInput("Please enter username: ");
         if (create) {
-            System.out.println("Please enter password for new user:");
+            Scanner scanner = new Scanner(System.in); // password must not be case-insensitive -> don't use 'getStringFromInput()'!
+            System.out.print("Please enter password for new user: ");
             password = scanner.nextLine();
+            String isAdminTemp = getStringFromInput("Grant admin rights to new user '" + username + "'? (enter 'yes' or any other): ");
+            if (isAdminTemp.equals("yes")) {
+                isAdmin = 1;
+            }
         }
         
-        String value = username + "', '" + password;
+        String value = username + "', '" + password + "', '" + isAdmin;
         multiMethodCall(procedure, value, error);
     }
     
@@ -280,7 +281,7 @@ public class DatabaseConnection {
             ResultSet databaseAnswer = call.executeQuery(query);
             databaseAnswer.next();
 
-            System.out.println(procedure + "successful");
+            System.out.println(procedure + " SUCCESSFUL");
             return databaseAnswer.getString(1);
         } catch (SQLException e) {
             sqlError(error, e);
