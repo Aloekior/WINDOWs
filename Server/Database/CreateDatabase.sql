@@ -156,10 +156,10 @@ DROP PROCEDURE IF EXISTS getSensorStates;
 CREATE PROCEDURE getSensorStates(input_room VARCHAR(20))
 BEGIN
     IF (input_room = '') THEN
-        SELECT sensor_room, sensor_window, sensor_current_state FROM sensors;
+        SELECT sensor_room, sensor_window, sensor_current_state FROM sensors WHERE sensor_active = 1;
     ELSE
         IF (checkSensorRoom(input_room)) THEN
-            SELECT sensor_window, sensor_current_state FROM sensors WHERE sensor_room = input_room;
+            SELECT sensor_window, sensor_current_state FROM sensors WHERE sensor_room = input_room AND sensor_active = 1;
         ELSE
             SELECT 'Invalid room selected', '';
         END IF;
