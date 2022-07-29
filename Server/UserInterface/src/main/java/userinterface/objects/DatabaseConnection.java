@@ -264,18 +264,26 @@ public class DatabaseConnection {
     private StringBuilder printDatabaseTable(ResultSet databaseAnswer, int columnCount) throws SQLException {
         StringBuilder output = new StringBuilder();
         while (databaseAnswer.next()) {
-            for (int i = 1; i <= columnCount; i++) {
+            for (int i = 1; i < columnCount; i++) {
                 output.append(databaseAnswer.getString(i));
                 if (i < columnCount - 1) {
                     output.append(", ");
                 } else if (i == columnCount - 1) {
                     output.append(":");
-                } else { // i == columnCount
-                    output.append("\n");
                 }
             }
+            output.append("\n");
+            output.append(translateOutput(databaseAnswer.getString(columnCount)));
         }
         return output;
+    }
+    
+    private String translateOutput(String boolInput) {
+        if (boolInput.equals("0")) {
+            return "opened";
+        } else {
+            return "closed";
+        }
     }
 
     public void userOption(boolean create) {
