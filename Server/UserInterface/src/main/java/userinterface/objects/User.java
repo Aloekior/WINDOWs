@@ -6,7 +6,8 @@ public class User {
     private final String username;
     private final String password;
     private boolean isValid = false;
-    
+    private boolean isAdmin = false;
+
     public User() {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Please enter username");
@@ -22,12 +23,20 @@ public class User {
     public String getPassword() {
         return password;
     }
-    
+
     public boolean isValid() {
         return this.isValid;
     }
-    
+
     public void isValid(boolean isValid) {
         this.isValid = isValid;
+    }
+
+    public boolean isAdmin() {
+        return this.isAdmin;
+    }
+
+    public void setAdmin() {
+        this.isAdmin = true;
     }
 }
