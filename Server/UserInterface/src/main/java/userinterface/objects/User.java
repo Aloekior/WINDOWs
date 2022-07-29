@@ -10,7 +10,7 @@ public class User {
     public User() {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Please enter username");
-        this.username = scanner.nextLine();
+        this.username = scanner.nextLine().toLowerCase();
         System.out.println("Please enter password for user '" + username + "'");
         this.password = scanner.nextLine();
     }
