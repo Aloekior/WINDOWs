@@ -7,6 +7,10 @@ import java.util.Scanner;
 
 public class UiSetup {
     public static void main(String[] args) {
+        runUiSetup();
+    }
+    
+    public static void runUiSetup() {
         String filename = "localConfig";
         
         try {
