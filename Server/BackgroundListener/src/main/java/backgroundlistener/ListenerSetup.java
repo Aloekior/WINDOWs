@@ -36,7 +36,7 @@ public class ListenerSetup {
             configWrite.write(url);
             configWrite.write(username);
             configWrite.write(password);
-            System.out.printf("Successfully written to file");
+            System.out.println("Successfully written to file");
         } catch (IOException e) {
             System.out.println("Error writing to file");
         }
