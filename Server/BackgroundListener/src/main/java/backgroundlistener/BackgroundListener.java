@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class BackgroundListener {
-    private final static Configuration configuration = new Configuration();
+    private static final Configuration configuration = new Configuration();
     
     public static void main(String[] args) throws IOException {
         boolean run = true;
