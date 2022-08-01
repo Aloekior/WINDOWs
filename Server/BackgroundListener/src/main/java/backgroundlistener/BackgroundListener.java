@@ -39,7 +39,7 @@ public class BackgroundListener {
     }
 
     private static boolean checkExit(String sensorMacAddress) {
-        return sensorMacAddress.equals("exitListener");
+        return !sensorMacAddress.equals("exitListener");
     }
 
     private static void sendOKToSensor(Socket sensor) throws IOException {
@@ -55,8 +55,9 @@ public class BackgroundListener {
                 call.executeQuery(query);
             }
         } catch (SQLException e) {
-            System.getLogger("Database Update failed for '" + macAddress +"'!" +
+            System.out.println("Database Update failed for '" + macAddress +"'!" +
                     "\nSQL Error: " + e.getErrorCode() +" " + e.getSQLState());
+            e.printStackTrace();
         }
     }
 }
