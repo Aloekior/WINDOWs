@@ -33,8 +33,8 @@ public class ListenerSetup {
         String password = scanner.nextLine();
         
         try (FileWriter configWrite = new FileWriter(filename)){
-            configWrite.write(url);
-            configWrite.write(username);
+            configWrite.write(url + "\n");
+            configWrite.write(username + "\n");
             configWrite.write(password);
             System.out.println("Successfully written to file");
         } catch (IOException e) {
