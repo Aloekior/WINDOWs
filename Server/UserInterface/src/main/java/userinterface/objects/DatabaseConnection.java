@@ -53,7 +53,7 @@ public class DatabaseConnection {
 
             String userRole = getUserRole();
             System.out.println(userRole);
-            if (userRole.equals("windowsadmin")) {
+            if (userRole.equalsIgnoreCase("windowsAdmin")) {
                 user.setAdmin();
             }
 
@@ -72,8 +72,9 @@ public class DatabaseConnection {
             return databaseAnswer.getString(1);
         } catch (SQLException e) {
             sqlError("Failed to retrieve user role", e);
+        } finally {
+            disconnect();
         }
-        disconnect();
         return "";
     }
 
@@ -155,9 +156,9 @@ public class DatabaseConnection {
     public void deactivateSensor() {
         String comment = """
                 Options to deactivate sensor by:
-                - MAC Address (aa:bb:cc:dd:ee:ff)
+                - MAC Address (a1:b2:c3:d4:e5:f6)
                 - Room name (alphabetical)
-                                        
+                
                 Please enter MAC or room:""";
         String sensorToRemove = getStringFromInput(comment);
 
@@ -294,7 +295,7 @@ public class DatabaseConnection {
 
         String username = getStringFromInput("Please enter username: ");
         if (create) {
-            Scanner scanner = new Scanner(System.in); // password must not be case-insensitive -> don't use 'getStringFromInput()'!
+            Scanner scanner = new Scanner(System.in); // password has to be case-sensitive -> don't use 'getStringFromInput()'!
             System.out.print("Please enter password for new user: ");
             password = scanner.nextLine();
             String isAdminTemp = getStringFromInput("Grant admin rights to new user '" + username + "'? (enter 'yes' or any other): ");
@@ -318,8 +319,9 @@ public class DatabaseConnection {
             return databaseAnswer.getString(1);
         } catch (SQLException e) {
             sqlError(error, e);
+        } finally {
+            disconnect();
         }
-        disconnect();
         return "";
     }
 

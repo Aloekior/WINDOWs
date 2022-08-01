@@ -12,59 +12,7 @@ public class Main {
         DatabaseConnection database = userLogin();
 
         if (database.databaseUserValid()) {
-            if (database.databaseUserAdmin()) {
-                adminSelection(database);
-            } else {
-                userSelection(database);
-            }
-        }
-    }
-
-    private static void adminSelection(DatabaseConnection database) {
-        while (true) {
-            System.out.print("\nPlease enter a command: ");
-            String command = scanner.nextLine().toLowerCase();
-            switch (command.toLowerCase()) {
-                case "add" -> database.addSensor();
-                case "deactivate" -> database.deactivateSensor();
-                case "change room" -> database.changeSensorLocation(false);
-                case "change window" -> database.changeSensorLocation(true);
-                case "states" -> database.printCurrentStatesPrepareQuery(false);
-                case "room" -> database.printCurrentStatesPrepareQuery(true);
-                case "history" -> database.printHistory();
-                case "create user" -> database.userOption(true);
-                case "delete user" -> database.userOption(false);
-                case "exit" -> {
-                    return;
-                }
-                default -> {
-                    if (!command.equalsIgnoreCase("help")) {
-                        System.out.printf("Unknown command '%s'%n", command);
-                    }
-                    printAdminHelp();
-                }
-            }
-        }
-    }
-
-    private static void userSelection(DatabaseConnection database) {
-        while (true) {
-            System.out.print("\nPlease enter a command: ");
-            String command = scanner.nextLine().toLowerCase();
-            switch (command.toLowerCase()) {
-                case "states" -> database.printCurrentStatesPrepareQuery(false);
-                case "room" -> database.printCurrentStatesPrepareQuery(true);
-                case "history" -> database.printHistory();
-                case "exit" -> {
-                    return;
-                }
-                default -> {
-                    if (!command.equalsIgnoreCase("help")) {
-                        System.out.printf("Unknown command '%s'%n", command);
-                    }
-                    printUserHelp();
-                }
-            }
+            selection(database, database.databaseUserAdmin());
         }
     }
 
@@ -80,6 +28,61 @@ public class Main {
 
         return database;
     }
+
+    private static void selection(DatabaseConnection database, boolean isAdmin) {
+        while (true) {
+            System.out.print("\nPlease enter a command: ");
+            String command = scanner.nextLine().toLowerCase();
+            if (isAdmin) {
+                if (adminSelection(database, command)) return;
+            } else {
+                if (userSelection(database, command)) return;
+            }
+        }
+    }
+
+    private static boolean adminSelection(DatabaseConnection database, String command) {
+        switch (command) {
+            case "add" -> database.addSensor();
+            case "deactivate" -> database.deactivateSensor();
+            case "change room" -> database.changeSensorLocation(false);
+            case "change window" -> database.changeSensorLocation(true);
+            case "states" -> database.printCurrentStatesPrepareQuery(false);
+            case "room" -> database.printCurrentStatesPrepareQuery(true);
+            case "history" -> database.printHistory();
+            case "create user" -> database.userOption(true);
+            case "delete user" -> database.userOption(false);
+            case "exit" -> {
+                return true;
+            }
+            default -> {
+                if (!command.equals("help")) {
+                    System.out.printf("Unknown command '%s'%n", command);
+                }
+                printAdminHelp();
+            }
+        }
+        return false;
+    }
+
+    private static boolean userSelection(DatabaseConnection database, String command) {
+        switch (command) {
+            case "states" -> database.printCurrentStatesPrepareQuery(false);
+            case "room" -> database.printCurrentStatesPrepareQuery(true);
+            case "history" -> database.printHistory();
+            case "exit" -> {
+                return true;
+            }
+            default -> {
+                if (!command.equals("help")) {
+                    System.out.printf("Unknown command '%s'%n", command);
+                }
+                printUserHelp();
+            }
+        }
+        return false;
+    }
+
 
     private static void printAdminHelp() {
         System.out.println("""
