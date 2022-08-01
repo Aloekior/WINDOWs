@@ -10,7 +10,7 @@ public class Configuration {
     private String password;
     
     public Configuration() {
-        File localConfig = new File ("localConfig");
+        File localConfig = new File ("localListenerConfig");
         try (Scanner read = new Scanner(localConfig)){
             this.url = read.nextLine();
             this.username = read.nextLine();
