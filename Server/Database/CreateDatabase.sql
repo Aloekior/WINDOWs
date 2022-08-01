@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS sensors
     sensor_mac           VARCHAR(17) UNIQUE NOT NULL,
     sensor_token         VARCHAR(36) UNIQUE NOT NULL,
     sensor_room          VARCHAR(20),
-    sensor_window        VARCHAR(10) UNIQUE,
+    sensor_window        VARCHAR(20) UNIQUE,
     sensor_active        BOOLEAN DEFAULT 0,
     sensor_current_state BOOLEAN DEFAULT 0,
     PRIMARY KEY (sensor_mac)
@@ -21,33 +21,6 @@ CREATE TABLE IF NOT EXISTS window_history
     PRIMARY KEY (history_entry_id),
     FOREIGN KEY (sensor_mac) REFERENCES sensors (sensor_mac)
 );
-
-
-/* TODO: create hook for serverListener password during installation */
-CREATE USER 'serverListener' IDENTIFIED BY 'a8aKJFAL8%lo113ZZ&Bvm12g_$1!';
-GRANT EXECUTE ON PROCEDURE WINDOWs.updateSensorState TO 'serverListener';
-
-DROP ROLE IF EXISTS windowsuser;
-CREATE ROLE windowsuser;
-GRANT EXECUTE ON PROCEDURE WINDOWs.getSensorStates TO windowsuser;
-GRANT EXECUTE ON PROCEDURE WINDOWs.getSensorHistory TO windowsuser;
-
-DROP ROLE IF EXISTS windowsadmin;
-CREATE ROLE windowsadmin;
-GRANT windowsuser TO windowsadmin;
-GRANT EXECUTE ON PROCEDURE WINDOWs.addSensor TO windowsadmin;
-GRANT EXECUTE ON PROCEDURE WINDOWs.changeSensorRoom TO windowsadmin;
-GRANT EXECUTE ON PROCEDURE WINDOWs.changeSensorWindow TO windowsadmin;
-GRANT EXECUTE ON PROCEDURE WINDOWs.deactivateSensorByMac TO windowsadmin;
-GRANT EXECUTE ON PROCEDURE WINDOWs.deactivateSensorsByRoom TO windowsadmin;
-GRANT EXECUTE ON PROCEDURE WINDOWs.checkTokenExists TO windowsadmin;
-GRANT EXECUTE ON PROCEDURE WINDOWs.checkSensorExists TO windowsadmin;
-GRANT EXECUTE ON PROCEDURE WINDOWs.createRemoveUser TO windowsadmin;
-
-
-/* TODO: create hook for windowsadmin during installation */
-CREATE USER 'windowsadmin' IDENTIFIED BY 'password';
-GRANT 'serverAdmin' TO 'windowsadmin';
 
 DELIMITER //
 
@@ -143,10 +116,10 @@ BEGIN
 END //
 
 DROP PROCEDURE IF EXISTS changeSensorWindow;
-CREATE PROCEDURE changeSensorWindow(input_mac VARCHAR(17), input_room_window VARCHAR(10))
+CREATE PROCEDURE changeSensorWindow(input_mac VARCHAR(17), input_window VARCHAR(20))
 BEGIN
     IF (checkSensorMac(input_mac)) THEN
-        UPDATE sensors SET sensor_window = input_room_window WHERE sensor_mac = input_mac;
+        UPDATE sensors SET sensor_window = input_window WHERE sensor_mac = input_mac;
         SELECT 0;
     END IF;
     SELECT -1;
@@ -170,12 +143,18 @@ DROP PROCEDURE IF EXISTS getSensorHistory;
 CREATE PROCEDURE getSensorHistory()
 BEGIN
     SELECT s.sensor_room, s.sensor_window, h.history_timestamp, h.history_state
-    FROM sensors s
-             LEFT JOIN window_history h ON s.sensor_mac = h.sensor_mac
+    FROM window_history h
+             LEFT JOIN sensors s ON s.sensor_mac = h.sensor_mac
     LIMIT 50;
 END //
 
 /* Multi-Functional-Procedures */
+
+DROP PROCEDURE IF EXISTS getAllSensors;
+CREATE PROCEDURE getAllSensors()
+    BEGIN 
+        SELECT * FROM sensors;
+    END //
 
 DROP PROCEDURE IF EXISTS deactivateSensorByMac;
 CREATE PROCEDURE deactivateSensorByMac(input_mac VARCHAR(17))
@@ -259,3 +238,32 @@ BEGIN
 END //
 
 DELIMITER ;
+
+
+/* TODO: create hook for serverListener password during installation */
+DROP USER IF EXISTS 'serverListener';
+CREATE USER 'serverListener' IDENTIFIED BY 'a8aKJFAL8%lo113ZZ&Bvm12g_$1!';
+GRANT EXECUTE ON PROCEDURE WINDOWs.updateSensorState TO 'serverListener';
+
+DROP ROLE IF EXISTS windowsuser;
+CREATE ROLE windowsuser;
+GRANT EXECUTE ON PROCEDURE WINDOWs.getSensorStates TO windowsuser;
+GRANT EXECUTE ON PROCEDURE WINDOWs.getSensorHistory TO windowsuser;
+
+DROP ROLE IF EXISTS windowsadmin;
+CREATE ROLE windowsadmin;
+GRANT windowsuser TO windowsadmin;
+GRANT EXECUTE ON PROCEDURE WINDOWs.addSensor TO windowsadmin;
+GRANT EXECUTE ON PROCEDURE WINDOWs.changeSensorRoom TO windowsadmin;
+GRANT EXECUTE ON PROCEDURE WINDOWs.changeSensorWindow TO windowsadmin;
+GRANT EXECUTE ON PROCEDURE WINDOWs.getAllSensors TO windowsadmin;
+GRANT EXECUTE ON PROCEDURE WINDOWs.deactivateSensorByMac TO windowsadmin;
+GRANT EXECUTE ON PROCEDURE WINDOWs.deactivateSensorsByRoom TO windowsadmin;
+GRANT EXECUTE ON PROCEDURE WINDOWs.checkTokenExists TO windowsadmin;
+GRANT EXECUTE ON PROCEDURE WINDOWs.checkSensorExists TO windowsadmin;
+GRANT EXECUTE ON PROCEDURE WINDOWs.createRemoveUser TO windowsadmin;
+
+
+/* TODO: create hook for windowsadmin during installation */
+/*CREATE USER 'windowsadmin' IDENTIFIED BY 'password';
+GRANT 'serverAdmin' TO 'windowsadmin'; */
