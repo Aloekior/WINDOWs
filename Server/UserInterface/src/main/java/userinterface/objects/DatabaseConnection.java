@@ -53,7 +53,7 @@ public class DatabaseConnection {
 
             String userRole = getUserRole();
             System.out.println(userRole);
-            if (userRole.equalsIgnoreCase("windowsAdmin")) {
+            if (userRole == null || userRole.equalsIgnoreCase("windowsAdmin")) {
                 user.setAdmin();
             }
 
@@ -87,6 +87,36 @@ public class DatabaseConnection {
             System.out.println("Connection to database failed.");
         }
         return noError;
+    }
+    
+    public void printSensors() {
+        connect();
+        String query = "CALL windows.getAllSensors()";
+
+        try (Statement call = connection.createStatement()) {
+            ResultSet databaseAnswer = call.executeQuery(query);
+
+            int columnCount = databaseAnswer.getMetaData().getColumnCount();
+
+            StringBuilder output = printSensors(databaseAnswer, columnCount);
+            System.out.println(output);
+        } catch (SQLException e) {
+            sqlError("Could not print sensors", e);
+        }
+        disconnect();
+    }
+
+    private StringBuilder printSensors(ResultSet databaseAnswer, int columnCount) throws SQLException {
+        StringBuilder output = new StringBuilder();
+        while (databaseAnswer.next()) {
+            for (int i = 1; i < columnCount; i++) {
+                output.append(databaseAnswer.getString(i));
+                output.append("\t");
+            }
+            output.append(translateOutput(databaseAnswer.getString(columnCount)));
+            output.append("\n");
+        }
+        return output;
     }
 
     public void addSensor() {
@@ -130,21 +160,18 @@ public class DatabaseConnection {
 
     private String checkMac(String macAddress) {
         String procedure = "checkSensorExists";
-        String error = "checkMac FAILED";
-        return multiMethodCall(procedure, macAddress, error);
+        return multiMethodCall(procedure, macAddress);
     }
 
     private boolean checkToken(String token) {
         String procedure = "checkTokenExists";
-        String error = "checkToken FAILED";
-        return Boolean.parseBoolean(multiMethodCall(procedure, token, error));
+        return Boolean.parseBoolean(multiMethodCall(procedure, token));
     }
 
     private void addSensorToDataBase(String macAddress, String token) {
         String procedure = "addSensor";
         String databaseString = macAddress + "', '" + token;
-        String error = "addSensor FAILED";
-        multiMethodCall(procedure, databaseString, error);
+        multiMethodCall(procedure, databaseString);
     }
 
     private void sendStringToSensor(String token, Socket sensor) throws IOException {
@@ -185,14 +212,12 @@ public class DatabaseConnection {
 
     private void deactivateSensorByMac(String macAddress) {
         String procedure = "deactivateSensorByMac";
-        String error = "deactivateSensorByMac FAILED";
-        multiMethodCall(procedure, macAddress, error);
+        multiMethodCall(procedure, macAddress);
     }
 
     private void deactivateSensorsByRoom(String room) {
         String procedure = "deactivateSensorsByRoom";
-        String error = "deactivateSensorsByRoom FAILED";
-        multiMethodCall(procedure, room, error);
+        multiMethodCall(procedure, room);
         System.out.printf("WARNING: ALL SENSORS IN ROOM '%s' DEACTIVATED!", room);
     }
 
@@ -208,9 +233,8 @@ public class DatabaseConnection {
             location = getStringFromInput("Please enter room name: ");
         }
         String value = macAddress + "', '" + location;
-        String error = procedure + " failed";
 
-        multiMethodCall(procedure, value, error);
+        multiMethodCall(procedure, value);
     }
 
     public void printCurrentStatesPrepareQuery(boolean checkRoom) {
@@ -237,8 +261,7 @@ public class DatabaseConnection {
             StringBuilder output = printDatabaseTable(databaseAnswer, columnCount);
             System.out.println(output);
         } catch (SQLException e) {
-            String error = "Could not print states";
-            sqlError(error, e);
+            sqlError("Failed to print states", e);
         }
         disconnect();
     }
@@ -255,8 +278,7 @@ public class DatabaseConnection {
             StringBuilder output = printDatabaseTable(databaseAnswer, columnCount);
             System.out.println(output);
         } catch (SQLException e) {
-            String error = "Could not print states";
-            sqlError(error, e);
+            sqlError("Failed to print states", e);
         }
 
         disconnect();
@@ -275,21 +297,24 @@ public class DatabaseConnection {
             }
             output.append("\n");
             output.append(translateOutput(databaseAnswer.getString(columnCount)));
+            output.append("\n");
         }
         return output;
     }
     
     private String translateOutput(String boolInput) {
-        if (boolInput.equals("0")) {
-            return "opened";
-        } else {
-            return "closed";
+        if (boolInput != null) {
+            if (boolInput.equals("0")) {
+                return "opened";
+            } else {
+                return "closed";
+            }
         }
+        return "ERROR";
     }
 
     public void userOption(boolean create) {
         String procedure = "createRemoveUser";
-        String error = "Failed to perform action!\nAre you permitted to modify users?";
         String password = "";
         int isAdmin = 0;
 
@@ -305,10 +330,10 @@ public class DatabaseConnection {
         }
 
         String value = username + "', '" + password + "', '" + isAdmin;
-        multiMethodCall(procedure, value, error);
+        multiMethodCall(procedure, value);
     }
 
-    private String multiMethodCall(String procedure, String value, String error) {
+    private String multiMethodCall(String procedure, String value) {
         connect();
         try (Statement call = connection.createStatement()) {
             String query = "CALL windows." + procedure + "('" + value + "')";
@@ -318,6 +343,7 @@ public class DatabaseConnection {
             System.out.println(procedure + " SUCCESSFUL");
             return databaseAnswer.getString(1);
         } catch (SQLException e) {
+            String error = procedure + "FAILED";
             sqlError(error, e);
         } finally {
             disconnect();

@@ -43,6 +43,7 @@ public class Main {
 
     private static boolean adminSelection(DatabaseConnection database, String command) {
         switch (command) {
+            case "sensors" -> database.printSensors();
             case "add" -> database.addSensor();
             case "deactivate" -> database.deactivateSensor();
             case "change room" -> database.changeSensorLocation(false);
@@ -90,6 +91,7 @@ public class Main {
                 states              prints all last reported sensor states
                 room                prints last reported sensor states assigned to the entered room only
                 history             prints 50 most recent history entries
+                sensors             list all existing sensors
                 add                 initiates procedure to add a new sensor to the system
                 deactivate          remove sensor from the system (will be set inactive)
                 change room         allows to change a sensors assigned room name
