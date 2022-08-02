@@ -6,3 +6,5 @@ target
 *.class
 compile_commands.json
 localConfig
+out
+MANIFEST.MF
