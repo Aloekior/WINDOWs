@@ -59,7 +59,7 @@ wifiToken readSettingsFromEEPROM(int address);
 
 void prepareSerial();
 
-String getStringFromSerial(String* comment);
+String getStringFromSerial(String *comment);
 
 bool testWiFiConnection(String *ssid, String *password);
 
@@ -67,7 +67,7 @@ void connectToWiFi(String *ssid, String *password);
 
 void runStatusUpdate();
 
-bool sendStatusToServer(String* token, IPAddress* ipAddress, bool state);
+bool sendStatusToServer(String *token, IPAddress *ipAddress, bool state);
 
 void stringToChar(String string, char *charArray);
 

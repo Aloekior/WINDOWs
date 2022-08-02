@@ -1,13 +1,14 @@
 #include "header.h"
 
 bool askForSetup() {
-  unsigned long timeOut = 10000;
+  unsigned int times = 5;
+  unsigned int current = 0;
 
   prepareSerial();
 
   Serial.print("\nPress enter to begin setup");
   delay(1000);
-  while (Serial.available() <= 0 && millis() < timeOut) {
+  while (Serial.available() <= 0 && current++ < times) {
     Serial.print(".");
     delay(1000);
   }
@@ -29,7 +30,7 @@ void runSetup() {
 bool setupInitialise() {
   byte eepromAddress = 0;
   clearEEPROM();
-  
+
   Serial.println("Setup started");
   wifiSettings wifi = setupWiFi();
   serverItems serverConfig = getServerToken();

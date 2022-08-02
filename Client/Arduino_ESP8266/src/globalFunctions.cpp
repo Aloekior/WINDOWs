@@ -9,7 +9,7 @@ void prepareSerial() {
   Serial.readString();
 }
 
-String getStringFromSerial(String* comment) {
+String getStringFromSerial(String *comment) {
   Serial.readString(); // clear Serial buffer before reading to discard leftovers
   Serial.println(*comment);
   Serial.flush();
