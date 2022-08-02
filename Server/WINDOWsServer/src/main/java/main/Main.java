@@ -15,6 +15,7 @@ public class Main {
 
     public static void main(String[] args) {
         if (checkForArgument(args, "runSetup")) {
+            System.out.println("runSetup exists");
             try {
                 runSetup();
             } catch (IOException e) {

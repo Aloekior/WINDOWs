@@ -23,15 +23,15 @@ public class ConfigurationSetup {
             if (input.nextLine().equalsIgnoreCase("yes")) {
                 Files.delete(filePath);
                 config = new File(fileName);
-                try {
-                    if (config.createNewFile()) {
-                        System.out.println("File created");
-                    }
-                    writeToFile(fileName);
-                } catch (IOException e) {
-                    System.out.println("Error creating file");
-                }
             }
+        }
+        try {
+            if (config.createNewFile()) {
+                System.out.println("File created");
+            }
+            writeToFile(fileName);
+        } catch (IOException e) {
+            System.out.println("Error creating file");
         }
     }
 
