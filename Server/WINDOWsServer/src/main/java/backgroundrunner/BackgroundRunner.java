@@ -56,7 +56,7 @@ public class BackgroundRunner {
 
     private static void updateSensorState(String macAddress, String token, int state) {
         try (Connection databaseConnection = DriverManager.getConnection(settings.getUrl(), settings.getUsername(), settings.getPassword())) {
-            String query = "CALL windows.updateSensorState('" + macAddress + "', '" + token + "', " + state + ")";
+            String query = "CALL WINDOWs.updateSensorState('" + macAddress + "', '" + token + "', " + state + ")";
             try (Statement call = databaseConnection.createStatement()) {
                 call.executeQuery(query);
             }
