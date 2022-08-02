@@ -8,10 +8,10 @@ public class RunnerConfiguration {
     private String url;
     private String username;
     private String password;
-    
+
     public RunnerConfiguration() {
-        File localConfig = new File ("localConfig");
-        try (Scanner read = new Scanner(localConfig)){
+        File localConfig = new File("localConfig");
+        try (Scanner read = new Scanner(localConfig)) {
             this.url = read.nextLine();
             this.username = read.nextLine();
             this.password = read.nextLine();

@@ -22,7 +22,7 @@ public class Main {
                 System.out.println("Setup failed, please try again.");
             }
         }
-        if (checkForArgument(args,"backgroundRunner")) {
+        if (checkForArgument(args, "backgroundRunner")) {
             try {
                 serverListener();
             } catch (IOException e) {
@@ -30,7 +30,7 @@ public class Main {
             }
         } else {
             DatabaseConnection database = userLogin();
-    
+
             if (database.databaseUserValid()) {
                 selection(database, database.databaseUserAdmin());
             }
@@ -108,7 +108,6 @@ public class Main {
         }
         return false;
     }
-
 
     private static void printAdminHelp() {
         System.out.println("""

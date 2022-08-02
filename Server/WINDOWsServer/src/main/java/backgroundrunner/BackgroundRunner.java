@@ -15,13 +15,14 @@ import java.sql.Statement;
 
 public class BackgroundRunner {
     private static final RunnerConfiguration settings = new RunnerConfiguration();
-    
-    private BackgroundRunner() {}
-    
+
+    private BackgroundRunner() {
+    }
+
     public static void serverListener() throws IOException {
         boolean run = true;
         int serverPort = 57335;
-        
+
         while (run) {
             try (ServerSocket socket = new ServerSocket(serverPort)) {
                 Socket sensor = socket.accept();
@@ -60,8 +61,8 @@ public class BackgroundRunner {
                 call.executeQuery(query);
             }
         } catch (SQLException e) {
-            System.out.println("Database Update failed for '" + macAddress +"'!" +
-                    "\nSQL Error: " + e.getErrorCode() +" " + e.getSQLState());
+            System.out.println("Database Update failed for '" + macAddress + "'!" +
+                    "\nSQL Error: " + e.getErrorCode() + " " + e.getSQLState());
             e.printStackTrace();
         }
     }

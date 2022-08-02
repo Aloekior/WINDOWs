@@ -10,12 +10,13 @@ import java.util.Scanner;
 
 public class ConfigurationSetup {
     public static final Scanner input = new Scanner(System.in);
-    
-    private ConfigurationSetup() {}
-    
-    public static void runSetup() throws  IOException {
+
+    private ConfigurationSetup() {
+    }
+
+    public static void runSetup() throws IOException {
         String fileName = "localConfig";
-        File config = new File (fileName);
+        File config = new File(fileName);
         Path filePath = config.toPath();
 
         if (checkForFile(config)) {
@@ -53,7 +54,7 @@ public class ConfigurationSetup {
         System.out.print("Please enter password for user '" + username + "': ");
         String password = scanner.nextLine();
 
-        try (FileWriter configWrite = new FileWriter(filename)){
+        try (FileWriter configWrite = new FileWriter(filename)) {
             configWrite.write(url + "\n");
             configWrite.write(username + "\n");
             configWrite.write(password);

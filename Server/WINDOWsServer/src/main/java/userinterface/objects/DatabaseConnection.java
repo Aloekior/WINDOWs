@@ -51,7 +51,7 @@ public class DatabaseConnection {
             System.out.printf("Successfully connected to database using '%s'%n", user.getUsername());
         }
     }
-    
+
     private String getUserRole() {
         connect();
         try (Statement call = connection.createStatement()) {
@@ -78,7 +78,7 @@ public class DatabaseConnection {
         }
         return noError;
     }
-    
+
     public void printSensors() {
         connect();
         String query = "CALL windows.getAllSensors()";
@@ -175,7 +175,7 @@ public class DatabaseConnection {
                 Options to deactivate sensor by:
                 - MAC Address (a1:b2:c3:d4:e5:f6)
                 - Room name (alphabetical)
-                
+                                
                 Please enter MAC or room:""";
         String sensorToRemove = getStringFromInput(comment);
 
@@ -291,7 +291,7 @@ public class DatabaseConnection {
         }
         return output;
     }
-    
+
     private String translateOutput(String boolInput) {
         if (boolInput != null) {
             if (boolInput.equals("0")) {
