@@ -277,9 +277,9 @@ public class DatabaseConnection {
     private String translateOutput(String boolInput) {
         if (boolInput != null) {
             if (boolInput.equals("0")) {
-                return "opened";
-            } else {
                 return "closed";
+            } else {
+                return "opened";
             }
         }
         return "ERROR";
