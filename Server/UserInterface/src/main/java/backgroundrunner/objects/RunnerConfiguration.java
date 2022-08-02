@@ -1,16 +1,16 @@
-package backgroundlistener.objects;
+package backgroundrunner.objects;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 
-public class Configuration {
+public class RunnerConfiguration {
     private String url;
     private String username;
     private String password;
     
-    public Configuration() {
-        File localConfig = new File ("localListenerConfig");
+    public RunnerConfiguration() {
+        File localConfig = new File ("localConfig");
         try (Scanner read = new Scanner(localConfig)){
             this.url = read.nextLine();
             this.username = read.nextLine();

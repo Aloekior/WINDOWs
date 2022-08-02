@@ -1,8 +1,11 @@
-package backgroundlistener;
+package backgroundrunner;
 
-import backgroundlistener.objects.Configuration;
+import backgroundrunner.objects.RunnerConfiguration;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.sql.Connection;
@@ -10,10 +13,12 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class BackgroundListener {
-    private static final Configuration configuration = new Configuration();
+public class BackgroundRunner {
+    private static final RunnerConfiguration settings = new RunnerConfiguration();
     
-    public static void main(String[] args) throws IOException {
+    private BackgroundRunner() {}
+    
+    public static void runInBackground() throws IOException {
         boolean run = true;
         int serverPort = 57335;
         
@@ -49,7 +54,7 @@ public class BackgroundListener {
     }
 
     private static void updateSensorState(String macAddress, String token, int state) {
-        try (Connection databaseConnection = DriverManager.getConnection(configuration.getUrl(), configuration.getUsername(), configuration.getPassword())) {
+        try (Connection databaseConnection = DriverManager.getConnection(settings.getUrl(), settings.getUsername(), settings.getPassword())) {
             String query = "CALL windows.updateSensorState('" + macAddress + "', '" + token + "', " + state + ")";
             try (Statement call = databaseConnection.createStatement()) {
                 call.executeQuery(query);

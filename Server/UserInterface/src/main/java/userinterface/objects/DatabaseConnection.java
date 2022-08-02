@@ -8,8 +8,6 @@ import java.sql.*;
 import java.util.Scanner;
 import java.util.UUID;
 
-import static userinterface.UiSetup.runUiSetup;
-
 public class DatabaseConnection {
     private String url;
     private Connection connection;
@@ -17,25 +15,18 @@ public class DatabaseConnection {
 
 
     public DatabaseConnection() {
-        String filename = "localConfig";
-        File config = new File(filename);
+        String fileName = "localConfig";
+        File config = new File(fileName);
 
         try (Scanner fileInput = new Scanner(config)) {
             readUrl(fileInput);
         } catch (FileNotFoundException e) {
-            runUiSetup();
-            try (Scanner fileInput = new Scanner(config)) {
-                readUrl(fileInput);
-            } catch (FileNotFoundException f) {
-                System.out.println("Problem with file 'localConfig'");
-            }
+            System.out.println("Configuration file not found, please contact your administrator");
         }
     }
 
     private void readUrl(Scanner fileInput) {
-        while (fileInput.hasNextLine()) {
-            this.url = fileInput.nextLine();
-        }
+        this.url = fileInput.nextLine();
     }
 
     public boolean databaseUserValid() {
