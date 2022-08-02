@@ -18,7 +18,7 @@ public class BackgroundRunner {
     
     private BackgroundRunner() {}
     
-    public static void runInBackground() throws IOException {
+    public static void serverListener() throws IOException {
         boolean run = true;
         int serverPort = 57335;
         

@@ -1,4 +1,4 @@
-package userinterface;
+package main;
 
 import userinterface.objects.DatabaseConnection;
 import userinterface.objects.User;
@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Scanner;
 
-import static backgroundrunner.BackgroundRunner.runInBackground;
+import static backgroundrunner.BackgroundRunner.serverListener;
 import static userinterface.ConfigurationSetup.runSetup;
 
 public class Main {
@@ -23,7 +23,7 @@ public class Main {
         }
         if (checkForArgument(args,"backgroundRunner")) {
             try {
-                runInBackground();
+                serverListener();
             } catch (IOException e) {
                 System.out.println("Failed to start backgroundRunner!");
             }
