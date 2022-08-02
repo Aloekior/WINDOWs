@@ -160,7 +160,7 @@ DROP PROCEDURE IF EXISTS deactivateSensorByMac;
 CREATE PROCEDURE deactivateSensorByMac(input_mac VARCHAR(17))
 BEGIN
     IF (checkSensorMac(input_mac)) THEN
-        UPDATE sensors SET sensor_room = NULL, sensor_active = 0 WHERE sensor_mac = input_mac;
+        UPDATE sensors SET sensor_active = 0 WHERE sensor_mac = input_mac;
         SELECT 0;
     END IF;
     SELECT -1;
@@ -170,7 +170,7 @@ DROP PROCEDURE IF EXISTS deactivateSensorsByRoom;
 CREATE PROCEDURE deactivateSensorsByRoom(input_room VARCHAR(20))
 BEGIN
     IF (checkSensorRoom(input_room)) THEN
-        UPDATE sensors SET sensor_room = NULL, sensor_window = NULL, sensor_active = 0 WHERE sensor_room = input_room;
+        UPDATE sensors SET sensor_active = 0 WHERE sensor_room = input_room;
         SELECT 0;
     END IF;
     SELECT -1;
