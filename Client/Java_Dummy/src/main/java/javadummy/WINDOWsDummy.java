@@ -31,6 +31,7 @@ public class WINDOWsDummy {
 
     private static DummyData dummySetup() throws InterruptedException {
         DummyData dummy = new DummyData();
+        String token;
 
         while (dummy.getToken().length() != 36) {
             try (Socket socket = new Socket("localhost", 57336)) {
@@ -41,7 +42,9 @@ public class WINDOWsDummy {
                 printWriter.flush();
 
                 BufferedReader serverResponse = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                dummy.setToken(serverResponse.readLine().toLowerCase());
+                token = serverResponse.readLine().toLowerCase();
+                System.out.println("token: " + token);
+                dummy.setToken(token);
             } catch (IOException e) {
                 Thread.sleep(1000);
             }
@@ -56,9 +59,6 @@ public class WINDOWsDummy {
             printWriter.println(dummy.getToken());
             printWriter.println(round % 2);
             printWriter.flush();
-
-            BufferedReader serverResponse = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            dummy.setToken(serverResponse.readLine().toLowerCase());
 
         } catch (ConnectException f) {
             System.out.println("Connection problem");
