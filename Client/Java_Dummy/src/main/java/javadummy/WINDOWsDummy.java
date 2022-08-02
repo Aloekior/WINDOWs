@@ -59,7 +59,6 @@ public class WINDOWsDummy {
             printWriter.println(dummy.getToken());
             printWriter.println(round % 2);
             printWriter.flush();
-
         } catch (ConnectException f) {
             System.out.println("Connection problem");
         }

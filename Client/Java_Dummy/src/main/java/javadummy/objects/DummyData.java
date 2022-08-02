@@ -3,7 +3,6 @@ package javadummy.objects;
 
 public class DummyData {
     static int count = 0;
-
     private final String macAddress;
     private final String name;
     private String token = "";
