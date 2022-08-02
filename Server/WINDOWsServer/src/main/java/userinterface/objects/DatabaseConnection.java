@@ -79,16 +79,16 @@ public class DatabaseConnection {
         return noError;
     }
 
-    public void printSensors() {
+    public void printSensorOrState() {
         connect();
-        String query = "CALL windows.getAllSensors()";
+        String query = "CALL WINDOWs.getAllSensors()";
 
         try (Statement call = connection.createStatement()) {
             ResultSet databaseAnswer = call.executeQuery(query);
 
             int columnCount = databaseAnswer.getMetaData().getColumnCount();
 
-            StringBuilder output = printSensors(databaseAnswer, columnCount);
+            StringBuilder output = printSensorOrState(databaseAnswer, columnCount);
             System.out.println(output);
         } catch (SQLException e) {
             sqlError("Could not print sensors", e);
@@ -96,7 +96,7 @@ public class DatabaseConnection {
         disconnect();
     }
 
-    private StringBuilder printSensors(ResultSet databaseAnswer, int columnCount) throws SQLException {
+    private StringBuilder printSensorOrState(ResultSet databaseAnswer, int columnCount) throws SQLException {
         StringBuilder output = new StringBuilder();
         while (databaseAnswer.next()) {
             for (int i = 1; i < columnCount; i++) {
@@ -233,12 +233,12 @@ public class DatabaseConnection {
 
         if (!checkRoom) {
             columnCount = 3;
-            query = "CALL windows.getSensorStates('')";
+            query = "CALL WINDOWs.getSensorStates('')";
             printStates(query, columnCount);
         } else {
             columnCount = 2;
             String room = getStringFromInput("Please enter room name: ");
-            query = "CALL windows.getSensorStates('" + room + "')";
+            query = "CALL WINDOWs.getSensorStates('" + room + "')";
             printStates(query, columnCount);
         }
     }
@@ -248,7 +248,7 @@ public class DatabaseConnection {
         try (Statement call = connection.createStatement()) {
             ResultSet databaseAnswer = call.executeQuery(query);
 
-            StringBuilder output = printDatabaseTable(databaseAnswer, columnCount);
+            StringBuilder output = printSensorOrState(databaseAnswer, columnCount);
             System.out.println(output);
         } catch (SQLException e) {
             sqlError("Failed to print states", e);
@@ -258,38 +258,20 @@ public class DatabaseConnection {
 
     public void printHistory() {
         connect();
-        String query = "CALL windows.getSensorHistory()";
+        String query = "CALL WINDOWs.getSensorHistory()";
 
         try (Statement call = connection.createStatement()) {
             ResultSet databaseAnswer = call.executeQuery(query);
 
             int columnCount = databaseAnswer.getMetaData().getColumnCount();
 
-            StringBuilder output = printDatabaseTable(databaseAnswer, columnCount);
+            StringBuilder output = printSensorOrState(databaseAnswer, columnCount);
             System.out.println(output);
         } catch (SQLException e) {
             sqlError("Failed to print states", e);
         }
 
         disconnect();
-    }
-
-    private StringBuilder printDatabaseTable(ResultSet databaseAnswer, int columnCount) throws SQLException {
-        StringBuilder output = new StringBuilder();
-        while (databaseAnswer.next()) {
-            for (int i = 1; i < columnCount; i++) {
-                output.append(databaseAnswer.getString(i));
-                if (i < columnCount - 1) {
-                    output.append(", ");
-                } else if (i == columnCount - 1) {
-                    output.append(":");
-                }
-            }
-            output.append("\n");
-            output.append(translateOutput(databaseAnswer.getString(columnCount)));
-            output.append("\n");
-        }
-        return output;
     }
 
     private String translateOutput(String boolInput) {
@@ -326,7 +308,7 @@ public class DatabaseConnection {
     private String multiMethodCall(String procedure, String value) {
         connect();
         try (Statement call = connection.createStatement()) {
-            String query = "CALL windows." + procedure + "('" + value + "')";
+            String query = "CALL WINDOWs." + procedure + "('" + value + "')";
             ResultSet databaseAnswer = call.executeQuery(query);
             databaseAnswer.next();
 
