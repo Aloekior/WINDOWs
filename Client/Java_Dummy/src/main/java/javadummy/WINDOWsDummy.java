@@ -10,8 +10,11 @@ import java.net.ConnectException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class WINDOWsDummy {
+    static Random random = new Random();
+
     public static void main(String[] args) throws InterruptedException, IOException {
         int times = 100;
         int run = 0;
@@ -24,7 +27,7 @@ public class WINDOWsDummy {
         while (run++ < times) {
             for (int i = 0; i < 5; i++) {
                 Thread.sleep(4000);
-                dummyRunner(dummies.get(i), run);
+                dummyRunner(dummies.get(i));
             }
         }
     }
@@ -52,12 +55,13 @@ public class WINDOWsDummy {
         return dummy;
     }
 
-    private static void dummyRunner(DummyData dummy, int round) throws IOException {
+    private static void dummyRunner(DummyData dummy) throws IOException {
+        int rand = random.nextInt(2);
         try (Socket socket = new Socket("localhost", 57335)) {
             PrintWriter printWriter = new PrintWriter(socket.getOutputStream());
             printWriter.println(dummy.getMacAddress());
             printWriter.println(dummy.getToken());
-            printWriter.println(round % 2);
+            printWriter.println(rand);
             printWriter.flush();
         } catch (ConnectException f) {
             System.out.println("Connection problem");
