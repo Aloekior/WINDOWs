@@ -2,6 +2,42 @@
 
 A project based on Raspberry-like combined with ESP8266 Arduino-like microcomputers to track the state of opened windows in a whole floor.
 
+## Server Installation
+
+### Install dependencies
+
+- Java Runtime @ 17
+- MariaDB @ 10.4.24
+
+#### Download server files
+
+`
+curl https://github.com/Aloekior/WINDOWs/releases/latest/download/CreateDatabase.sql
+curl https://github.com/Aloekior/WINDOWs/releases/latest/download/WINDOWsServer.jar
+`
+
+#### Run CreateDatabase.sql
+
+`curl https://github.com/Aloekior/WINDOWs/blob/main/Server/Database/CreateDatabase.sql
+mysql_secure_installation
+mysql -u user -p < Server/Database/CreateDatabase.sql`
+
+#### Run first time setup
+
+`java -jar WINDOWsServer.jar runSetup`
+
+Log in as Database root and create a new admin user.
+
+#### Start backgroundListener
+
+`java -jar WINDOWsServer.jar backgroundRunner`
+
+Add the command above to your autorun to automatically start the listener service at boot.
+
+#### Run Userinterface
+
+`java -jar WINDOWsServer.jar`
+
 ## Documentation
 
 ESP8266:
