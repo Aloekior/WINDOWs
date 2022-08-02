@@ -68,7 +68,7 @@ public class Main {
 
     private static boolean adminSelection(DatabaseConnection database, String command) {
         switch (command) {
-            case "sensors" -> database.printSensors();
+            case "sensors" -> database.printSensorOrState();
             case "add sensor" -> database.addSensor();
             case "deactivate" -> database.deactivateSensor();
             case "change room" -> database.changeSensorLocation(false);
