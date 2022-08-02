@@ -13,7 +13,6 @@ public class DatabaseConnection {
     private Connection connection;
     private User user;
 
-
     public DatabaseConnection() {
         String fileName = "localConfig";
         File config = new File(fileName);
