@@ -2,7 +2,7 @@
 
 # WINDOWs
 
-A project based on Raspberry-like combined with ESP8266 Arduino-like microcomputers to track the state of opened windows in a whole floor.
+A project based on ESP8266 microcontrollers to track the state of opened windows on a floor.
 
 ## Server Installation
 
